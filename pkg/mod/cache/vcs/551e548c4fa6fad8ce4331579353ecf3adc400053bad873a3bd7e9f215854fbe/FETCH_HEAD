@@ -1,0 +1,5 @@
+5064bf16385830e7d588cea540d63d36e3dff576		branch 'add_special_string_tests' of https://github.com/skip2/go-qrcode
+cb3bf7ba5ad6fdfa39f4e0533bdee90445d8bb89		branch 'fix_scaling' of https://github.com/skip2/go-qrcode
+d47ab36ce042b6a208847b4a47b2b205be70ee65		branch 'fix_unnormalised_remainder' of https://github.com/skip2/go-qrcode
+9434209cb0863a5f3c316b49a8abb7f7dc80610a		branch 'master' of https://github.com/skip2/go-qrcode
+2ce9a3000305531270adfff89395f0962a69c793		branch 'wiki' of https://github.com/skip2/go-qrcode
