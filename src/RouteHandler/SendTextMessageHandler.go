@@ -56,6 +56,9 @@ func (handler *SendTextMessageHandler) ServeHTTP(w http.ResponseWriter, r *http.
 	}
 	log.Printf("message sent to %s by session %s \n", msgReq.ChatId, msgReq.SessionId)
 	responseBody, err := json.Marshal(&message)
+	if err != nil {
+		log.Println("error message marshalling", err)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(responseBody)
 	if err != nil {

@@ -49,7 +49,9 @@ func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		log.Printf("%s: %v\n", errorPrefix, err)
 		return
 	}
-	defer response.Body.Close()
+	defer func() {
+		_ = response.Body.Close()
+	}()
 
 	img, err := ioutil.ReadAll(response.Body)
 	if err != nil {
@@ -78,6 +80,9 @@ func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	}
 	log.Printf("message sent to %s by session %s \n", msgReq.ChatId, msgReq.SessionId)
 	responseBody, err := json.Marshal(&message)
+	if err != nil {
+		log.Println("error message marshalling", err)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(responseBody)
 	if err != nil {

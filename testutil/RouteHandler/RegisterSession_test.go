@@ -11,9 +11,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/r-erema/wapi/src/RouteHandler"
 	"github.com/r-erema/wapi/src/Session"
-	"github.com/r-erema/wapi/test/Mock/Auth"
-	"github.com/r-erema/wapi/test/Mock/MessageListener"
-	"github.com/r-erema/wapi/test/Mock/SessionWorks"
+	"github.com/r-erema/wapi/testutil/Mock/Auth"
+	"github.com/r-erema/wapi/testutil/Mock/MessageListener"
+	"github.com/r-erema/wapi/testutil/Mock/SessionWorks"
 )
 
 func TestRegisterSessionSuccess(t *testing.T) {
