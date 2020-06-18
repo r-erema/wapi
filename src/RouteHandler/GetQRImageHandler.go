@@ -1,14 +1,15 @@
 package RouteHandler
 
 import (
-	"Service/QRFileResolver"
 	"bytes"
-	"github.com/gorilla/mux"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/gorilla/mux"
+	"github.com/r-erema/wapi/src/Service/QRFileResolver"
 )
 
 type GetQRImageHandler struct {

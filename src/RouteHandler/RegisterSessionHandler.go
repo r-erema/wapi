@@ -1,13 +1,14 @@
 package RouteHandler
 
 import (
-	"Service/Auth"
-	"Service/MessageListener"
-	"Service/SessionWorks"
 	"encoding/json"
 	"log"
 	"net/http"
 	"sync"
+
+	"github.com/r-erema/wapi/src/Service/Auth"
+	"github.com/r-erema/wapi/src/Service/MessageListener"
+	"github.com/r-erema/wapi/src/Service/SessionWorks"
 )
 
 type RegisterSessionHandler struct {

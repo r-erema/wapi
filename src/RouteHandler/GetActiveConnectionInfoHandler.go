@@ -1,13 +1,14 @@
 package RouteHandler
 
 import (
-	"Service/ConnectionsSupervisor"
-	Session2 "Session"
 	"encoding/json"
-	"github.com/Rhymen/go-whatsapp"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+
+	"github.com/Rhymen/go-whatsapp"
+	"github.com/gorilla/mux"
+	"github.com/r-erema/wapi/src/Service/ConnectionsSupervisor"
+	Session2 "github.com/r-erema/wapi/src/Session"
 )
 
 type GetActiveConnectionInfoHandler struct {

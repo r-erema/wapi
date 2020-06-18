@@ -1,14 +1,15 @@
 package RouteHandler
 
 import (
-	"Service/Auth"
-	"Service/ConnectionsSupervisor"
 	"bytes"
 	"encoding/json"
-	"github.com/Rhymen/go-whatsapp"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/Rhymen/go-whatsapp"
+	"github.com/r-erema/wapi/src/Service/Auth"
+	"github.com/r-erema/wapi/src/Service/ConnectionsSupervisor"
 )
 
 type SendImageHandler struct {

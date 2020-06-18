@@ -1,12 +1,13 @@
 package RouteHandler
 
 import (
-	"Service/Auth"
-	"Service/ConnectionsSupervisor"
 	"encoding/json"
-	"github.com/Rhymen/go-whatsapp"
 	"log"
 	"net/http"
+
+	"github.com/Rhymen/go-whatsapp"
+	"github.com/r-erema/wapi/src/Service/Auth"
+	"github.com/r-erema/wapi/src/Service/ConnectionsSupervisor"
 )
 
 type SendTextMessageHandler struct {

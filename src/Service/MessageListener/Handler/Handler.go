@@ -1,19 +1,20 @@
 package Handler
 
 import (
-	"Service/ConnectionsSupervisor"
-	"Service/SessionWorks"
-	"Session"
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/Rhymen/go-whatsapp"
-	"github.com/getsentry/sentry-go"
-	"github.com/go-redis/redis"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/Rhymen/go-whatsapp"
+	"github.com/getsentry/sentry-go"
+	"github.com/go-redis/redis"
+	"github.com/r-erema/wapi/src/Service/ConnectionsSupervisor"
+	"github.com/r-erema/wapi/src/Service/SessionWorks"
+	"github.com/r-erema/wapi/src/Session"
 )
 
 type Handler struct {

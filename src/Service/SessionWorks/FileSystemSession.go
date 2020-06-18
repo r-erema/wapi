@@ -1,12 +1,13 @@
 package SessionWorks
 
 import (
-	"Session"
 	"encoding/gob"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/r-erema/wapi/src/Session"
 )
 
 const sessionFileExt = ".gob"

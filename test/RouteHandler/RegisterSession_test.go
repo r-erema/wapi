@@ -1,18 +1,19 @@
 package RouteHandler
 
 import (
-	"../../test/Mock/Auth"
-	"../../test/Mock/MessageListener"
-	"../../test/Mock/SessionWorks"
-	"RouteHandler"
-	"Session"
-	"github.com/Rhymen/go-whatsapp"
-	"github.com/golang/mock/gomock"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/Rhymen/go-whatsapp"
+	"github.com/golang/mock/gomock"
+	"github.com/r-erema/wapi/src/RouteHandler"
+	"github.com/r-erema/wapi/src/Session"
+	"github.com/r-erema/wapi/test/Mock/Auth"
+	"github.com/r-erema/wapi/test/Mock/MessageListener"
+	"github.com/r-erema/wapi/test/Mock/SessionWorks"
 )
 
 func TestRegisterSessionSuccess(t *testing.T) {

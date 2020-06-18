@@ -1,23 +1,24 @@
 package main
 
 import (
-	"./config"
-	"RouteHandler"
-	"Service/Auth"
-	"Service/ConnectionsSupervisor"
-	"Service/MessageListener"
-	"Service/SessionWorks"
 	"crypto/tls"
 	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"time"
+
 	_ "github.com/Rhymen/go-whatsapp"
 	"github.com/getsentry/sentry-go"
 	"github.com/go-redis/redis"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"log"
-	"net/http"
-	"os"
-	"time"
+	"github.com/r-erema/wapi/config"
+	"github.com/r-erema/wapi/src/RouteHandler"
+	"github.com/r-erema/wapi/src/Service/Auth"
+	"github.com/r-erema/wapi/src/Service/ConnectionsSupervisor"
+	"github.com/r-erema/wapi/src/Service/MessageListener"
+	"github.com/r-erema/wapi/src/Service/SessionWorks"
 )
 
 func main() {
