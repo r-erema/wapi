@@ -1,7 +1,8 @@
 package ConnectionsSupervisor
 
 import (
-	"Session"
+	"github.com/r-erema/wapi/src/Session"
+
 	"github.com/Rhymen/go-whatsapp"
 )
 

@@ -1,14 +1,15 @@
 package RouteHandler
 
 import (
-	"Service/Auth"
-	"Service/ConnectionsSupervisor"
 	"bytes"
 	"encoding/json"
-	"github.com/Rhymen/go-whatsapp"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/Rhymen/go-whatsapp"
+	"github.com/r-erema/wapi/src/Service/Auth"
+	"github.com/r-erema/wapi/src/Service/ConnectionsSupervisor"
 )
 
 type SendImageHandler struct {
@@ -48,7 +49,10 @@ func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		log.Printf("%s: %v\n", errorPrefix, err)
 		return
 	}
-	defer response.Body.Close()
+	defer func() {
+		err = response.Body.Close()
+		log.Printf("%s: %v\n", "response body closing error", err)
+	}()
 
 	img, err := ioutil.ReadAll(response.Body)
 	if err != nil {
@@ -77,6 +81,9 @@ func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	}
 	log.Printf("message sent to %s by session %s \n", msgReq.ChatId, msgReq.SessionId)
 	responseBody, err := json.Marshal(&message)
+	if err != nil {
+		log.Println("error message marshalling", err)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(responseBody)
 	if err != nil {

@@ -5,9 +5,9 @@
 package mock_Auth
 
 import (
-	Session "Session"
 	go_whatsapp "github.com/Rhymen/go-whatsapp"
 	gomock "github.com/golang/mock/gomock"
+	Session "github.com/r-erema/wapi/src/Session"
 	reflect "reflect"
 )
 

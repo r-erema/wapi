@@ -1,13 +1,15 @@
 package RouteHandler
 
 import (
-	"Service/ConnectionsSupervisor"
-	Session2 "Session"
 	"encoding/json"
-	"github.com/Rhymen/go-whatsapp"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+
+	"github.com/r-erema/wapi/src/Service/ConnectionsSupervisor"
+	session2 "github.com/r-erema/wapi/src/Session"
+
+	"github.com/Rhymen/go-whatsapp"
+	"github.com/gorilla/mux"
 )
 
 type GetActiveConnectionInfoHandler struct {
@@ -41,5 +43,5 @@ func (handler *GetActiveConnectionInfoHandler) ServeHTTP(w http.ResponseWriter, 
 
 type Resp struct {
 	ConnectionInfo *whatsapp.Info
-	SessionInfo    *Session2.WapiSession
+	SessionInfo    *session2.WapiSession
 }

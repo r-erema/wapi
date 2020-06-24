@@ -1,12 +1,14 @@
 package RouteHandler
 
 import (
-	"Service/Auth"
-	"Service/ConnectionsSupervisor"
 	"encoding/json"
-	"github.com/Rhymen/go-whatsapp"
 	"log"
 	"net/http"
+
+	"github.com/r-erema/wapi/src/Service/Auth"
+	"github.com/r-erema/wapi/src/Service/ConnectionsSupervisor"
+
+	"github.com/Rhymen/go-whatsapp"
 )
 
 type SendTextMessageHandler struct {
@@ -55,6 +57,9 @@ func (handler *SendTextMessageHandler) ServeHTTP(w http.ResponseWriter, r *http.
 	}
 	log.Printf("message sent to %s by session %s \n", msgReq.ChatId, msgReq.SessionId)
 	responseBody, err := json.Marshal(&message)
+	if err != nil {
+		log.Println("error message marshalling", err)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(responseBody)
 	if err != nil {

@@ -1,16 +1,18 @@
 package Auth
 
 import (
-	"Service/ConnectionsSupervisor"
-	"Service/SessionWorks"
-	"Session"
 	"fmt"
-	"github.com/Baozisoftware/qrcode-terminal-go"
-	"github.com/Rhymen/go-whatsapp"
-	"github.com/skip2/go-qrcode"
 	"log"
 	"os"
 	"time"
+
+	"github.com/r-erema/wapi/src/Service/ConnectionsSupervisor"
+	"github.com/r-erema/wapi/src/Service/SessionWorks"
+	"github.com/r-erema/wapi/src/Session"
+
+	"github.com/Baozisoftware/qrcode-terminal-go"
+	"github.com/Rhymen/go-whatsapp"
+	"github.com/skip2/go-qrcode"
 )
 
 type auth struct {

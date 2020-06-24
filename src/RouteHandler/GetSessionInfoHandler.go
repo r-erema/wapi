@@ -1,12 +1,14 @@
 package RouteHandler
 
 import (
-	"Service/SessionWorks"
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/r-erema/wapi/src/Service/SessionWorks"
+
+	"github.com/gorilla/mux"
 )
 
 type GetSessionInfoHandler struct {

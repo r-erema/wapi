@@ -1,19 +1,21 @@
 package Handler
 
 import (
-	"Service/ConnectionsSupervisor"
-	"Service/SessionWorks"
-	"Session"
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/Rhymen/go-whatsapp"
-	"github.com/getsentry/sentry-go"
-	"github.com/go-redis/redis"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/r-erema/wapi/src/Service/ConnectionsSupervisor"
+	"github.com/r-erema/wapi/src/Service/SessionWorks"
+	"github.com/r-erema/wapi/src/Session"
+
+	"github.com/Rhymen/go-whatsapp"
+	"github.com/getsentry/sentry-go"
+	"github.com/go-redis/redis"
 )
 
 type Handler struct {
@@ -112,6 +114,9 @@ func (h *Handler) HandleTextMessage(message whatsapp.TextMessage) {
 	webhookUrl := h.WebhookUrl + h.Session.SessionId
 
 	requestBody, err := json.Marshal(&message)
+	if err != nil {
+		log.Println("error message marshalling", err)
+	}
 	resp, err := http.Post(webhookUrl, "application/json", bytes.NewBuffer(requestBody))
 
 	if nil != err {
@@ -125,7 +130,9 @@ func (h *Handler) HandleTextMessage(message whatsapp.TextMessage) {
 	}
 	log.Printf("message sent to `%s`, by session `%s`, login `%s`", webhookUrl, h.Session.SessionId, h.Session.WhatsAppSession.Wid)
 
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 	_, err = ioutil.ReadAll(resp.Body)
 
 	if nil != err {
@@ -149,8 +156,5 @@ func (h *Handler) isMessageAllowedToHandle(message whatsapp.TextMessage) bool {
 
 func (h *Handler) messageAlreadySent(messageId string) bool {
 	_, err := h.redisClient.Get("wapi_sent_message:" + messageId).Result()
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }

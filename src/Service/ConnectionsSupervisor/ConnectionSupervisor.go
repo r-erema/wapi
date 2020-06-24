@@ -2,9 +2,10 @@ package ConnectionsSupervisor
 
 import (
 	"fmt"
-	"github.com/getsentry/sentry-go"
 	"log"
 	"time"
+
+	"github.com/getsentry/sentry-go"
 )
 
 type connectionsSupervisor struct {

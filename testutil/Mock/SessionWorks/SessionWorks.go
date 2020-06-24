@@ -5,8 +5,8 @@
 package mock_SessionWorks
 
 import (
-	Session "Session"
 	gomock "github.com/golang/mock/gomock"
+	Session "github.com/r-erema/wapi/src/Session"
 	reflect "reflect"
 )
 
