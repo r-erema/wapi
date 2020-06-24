@@ -1,8 +1,9 @@
 package ConnectionsSupervisor
 
 import (
-	"github.com/Rhymen/go-whatsapp"
 	"github.com/r-erema/wapi/src/Session"
+
+	"github.com/Rhymen/go-whatsapp"
 )
 
 type SessionConnectionDTO struct {

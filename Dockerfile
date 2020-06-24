@@ -7,5 +7,4 @@ FROM alpine:3.12
 MAINTAINER Roma Erema
 WORKDIR /root/
 COPY --from=builder /var/tmp/wapi/bin/wapi .
-COPY ./.env .
 CMD ["./wapi"]

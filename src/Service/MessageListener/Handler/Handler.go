@@ -9,12 +9,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Rhymen/go-whatsapp"
-	"github.com/getsentry/sentry-go"
-	"github.com/go-redis/redis"
 	"github.com/r-erema/wapi/src/Service/ConnectionsSupervisor"
 	"github.com/r-erema/wapi/src/Service/SessionWorks"
 	"github.com/r-erema/wapi/src/Session"
+
+	"github.com/Rhymen/go-whatsapp"
+	"github.com/getsentry/sentry-go"
+	"github.com/go-redis/redis"
 )
 
 type Handler struct {

@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-
-	"github.com/joho/godotenv"
 )
 
 const (
@@ -38,9 +36,7 @@ type Config struct {
 	ConnectionTimeout int64
 }
 
-func Init(dotEnvFilePath string) (*Config, error) {
-	_ = godotenv.Load(dotEnvFilePath)
-
+func Init() (*Config, error) {
 	env := os.Getenv(Env)
 	if env == "" {
 		env = ProdMode

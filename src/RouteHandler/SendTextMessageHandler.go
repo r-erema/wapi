@@ -5,9 +5,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Rhymen/go-whatsapp"
 	"github.com/r-erema/wapi/src/Service/Auth"
 	"github.com/r-erema/wapi/src/Service/ConnectionsSupervisor"
+
+	"github.com/Rhymen/go-whatsapp"
 )
 
 type SendTextMessageHandler struct {

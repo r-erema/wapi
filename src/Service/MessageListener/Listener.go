@@ -8,11 +8,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/go-redis/redis"
 	"github.com/r-erema/wapi/src/Service/Auth"
 	"github.com/r-erema/wapi/src/Service/ConnectionsSupervisor"
 	"github.com/r-erema/wapi/src/Service/MessageListener/Handler"
 	"github.com/r-erema/wapi/src/Service/SessionWorks"
+
+	"github.com/go-redis/redis"
 	_ "github.com/thoas/go-funk"
 )
 

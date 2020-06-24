@@ -7,13 +7,14 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Rhymen/go-whatsapp"
-	"github.com/golang/mock/gomock"
 	"github.com/r-erema/wapi/src/RouteHandler"
 	"github.com/r-erema/wapi/src/Session"
 	"github.com/r-erema/wapi/testutil/Mock/Auth"
 	"github.com/r-erema/wapi/testutil/Mock/MessageListener"
 	"github.com/r-erema/wapi/testutil/Mock/SessionWorks"
+
+	"github.com/Rhymen/go-whatsapp"
+	"github.com/golang/mock/gomock"
 )
 
 func TestRegisterSessionSuccess(t *testing.T) {

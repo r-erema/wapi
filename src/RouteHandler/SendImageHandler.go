@@ -50,7 +50,8 @@ func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	defer func() {
-		_ = response.Body.Close()
+		err = response.Body.Close()
+		log.Printf("%s: %v\n", "response body closing error", err)
 	}()
 
 	img, err := ioutil.ReadAll(response.Body)

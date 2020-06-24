@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gorilla/mux"
 	"github.com/r-erema/wapi/src/Service/SessionWorks"
+
+	"github.com/gorilla/mux"
 )
 
 type GetSessionInfoHandler struct {

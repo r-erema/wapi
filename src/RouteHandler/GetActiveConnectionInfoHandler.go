@@ -5,10 +5,11 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/r-erema/wapi/src/Service/ConnectionsSupervisor"
+	session2 "github.com/r-erema/wapi/src/Session"
+
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/gorilla/mux"
-	"github.com/r-erema/wapi/src/Service/ConnectionsSupervisor"
-	Session2 "github.com/r-erema/wapi/src/Session"
 )
 
 type GetActiveConnectionInfoHandler struct {
@@ -42,5 +43,5 @@ func (handler *GetActiveConnectionInfoHandler) ServeHTTP(w http.ResponseWriter, 
 
 type Resp struct {
 	ConnectionInfo *whatsapp.Info
-	SessionInfo    *Session2.WapiSession
+	SessionInfo    *session2.WapiSession
 }

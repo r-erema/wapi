@@ -8,22 +8,23 @@ import (
 	"os"
 	"time"
 
-	_ "github.com/Rhymen/go-whatsapp"
-	"github.com/getsentry/sentry-go"
-	"github.com/go-redis/redis"
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
 	"github.com/r-erema/wapi/config"
 	"github.com/r-erema/wapi/src/RouteHandler"
 	"github.com/r-erema/wapi/src/Service/Auth"
 	"github.com/r-erema/wapi/src/Service/ConnectionsSupervisor"
 	"github.com/r-erema/wapi/src/Service/MessageListener"
 	"github.com/r-erema/wapi/src/Service/SessionWorks"
+
+	_ "github.com/Rhymen/go-whatsapp"
+	"github.com/getsentry/sentry-go"
+	"github.com/go-redis/redis"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 )
 
 func main() {
 
-	conf, err := config.Init("./.env")
+	conf, err := config.Init()
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -8,8 +8,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/r-erema/wapi/src/Service/QRFileResolver"
+
+	"github.com/gorilla/mux"
 )
 
 type GetQRImageHandler struct {
