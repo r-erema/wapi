@@ -8,31 +8,34 @@ import (
 	"os"
 	"time"
 
-	"github.com/r-erema/wapi/config"
-	"github.com/r-erema/wapi/src/RouteHandler"
-	"github.com/r-erema/wapi/src/Service/Auth"
-	"github.com/r-erema/wapi/src/Service/ConnectionsSupervisor"
-	"github.com/r-erema/wapi/src/Service/MessageListener"
-	"github.com/r-erema/wapi/src/Service/SessionWorks"
+	"github.com/r-erema/wapi/internal/config"
+	"github.com/r-erema/wapi/internal/http/handler/connection"
+	"github.com/r-erema/wapi/internal/http/handler/message"
+	"github.com/r-erema/wapi/internal/http/handler/qr"
+	"github.com/r-erema/wapi/internal/http/handler/session"
+	messageRepo "github.com/r-erema/wapi/internal/repository/message"
+	sessionRepo "github.com/r-erema/wapi/internal/repository/session"
+	"github.com/r-erema/wapi/internal/service/auth"
+	"github.com/r-erema/wapi/internal/service/listener"
+	"github.com/r-erema/wapi/internal/service/supervisor"
 
 	_ "github.com/Rhymen/go-whatsapp"
 	"github.com/getsentry/sentry-go"
-	"github.com/go-redis/redis"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
 func main() {
 
-	conf, err := config.Init()
+	conf, err := config.New()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	log.Print("connecting to redis...")
-	redisClient, err := initRedis(conf.RedisHost)
+	redisClient, err := messageRepo.NewRedisRepository(conf.RedisHost)
 	if err != nil {
-		log.Fatalf("error of init redis client: %v\n", err)
+		log.Fatalf("error of init redis repo: %v\n", err)
 	}
 	log.Print("ok")
 
@@ -45,31 +48,31 @@ func main() {
 		log.Print("ok")
 	}
 
-	sessionWorks, err := SessionWorks.NewFileSystemSession(conf.FileSystemRootPath + "/sessions")
+	sessionWorks, err := sessionRepo.NewFileSystemSession(conf.FileSystemRootPath + "/sessions")
 	if err != nil {
-		log.Fatalf("can't create service `SessionWorks`: %v\n", err)
+		log.Fatalf("can't create service `session`: %v\n", err)
 	}
 
-	connSupervisor := ConnectionsSupervisor.NewConnectionsSupervisor(time.Duration(conf.ConnectionsCheckoutDuration))
+	connSupervisor := supervisor.NewConnectionsSupervisor(time.Duration(conf.ConnectionsCheckoutDuration))
 
-	auth, err := Auth.NewAuth(conf.FileSystemRootPath+"/qr-codes", time.Duration(conf.ConnectionTimeout)*time.Second, sessionWorks, connSupervisor)
+	a, err := auth.NewAuth(conf.FileSystemRootPath+"/qr-codes", time.Duration(conf.ConnectionTimeout)*time.Second, sessionWorks, connSupervisor)
 	if err != nil {
-		log.Fatalf("can't create service `Auth`: %v\n", err)
+		log.Fatalf("can't create service `a`: %v\n", err)
 	}
 
-	listener := MessageListener.NewListener(sessionWorks, connSupervisor, auth, conf.WebHookUrl, redisClient)
+	l := listener.NewListener(sessionWorks, connSupervisor, a, conf.WebHookUrl, redisClient)
 
-	registerHandler := RouteHandler.NewRegisterSessionHandler(auth, listener, sessionWorks)
+	registerHandler := session.NewRegisterSessionHandler(a, l, sessionWorks)
 	log.Print("trying to auto connect saved sessions if exist...")
 	if err = registerHandler.TryToAutoConnectAllSessions(); err != nil {
 		log.Fatalf("error while trying restore sesssions: %s", err)
 	}
 
-	sendMessageHandler := RouteHandler.NewSendMessageHandler(auth, connSupervisor)
-	sendImageHandler := RouteHandler.NewSendImageHandler(auth, connSupervisor)
-	getQRImageHandler := RouteHandler.NewGetQRImageHandler(auth)
-	getSessionInfoHandler := RouteHandler.NewGetSessionInfoHandler(sessionWorks)
-	getActiveConnectionInfoHandler := RouteHandler.NewGetActiveConnectionInfoHandler(connSupervisor)
+	sendMessageHandler := message.NewSendMessageHandler(a, connSupervisor)
+	sendImageHandler := message.NewSendImageHandler(a, connSupervisor)
+	getQRImageHandler := qr.NewGetQRImageHandler(a)
+	getSessionInfoHandler := session.NewGetSessionInfoHandler(sessionWorks)
+	getActiveConnectionInfoHandler := connection.NewGetActiveConnectionInfoHandler(connSupervisor)
 
 	err = runServer(
 		conf,
@@ -87,12 +90,12 @@ func main() {
 
 func runServer(
 	conf *config.Config,
-	registerHandler *RouteHandler.RegisterSessionHandler,
-	sendMessageHandler *RouteHandler.SendTextMessageHandler,
-	sendImageHandler *RouteHandler.SendImageHandler,
-	getQRImageHandler *RouteHandler.GetQRImageHandler,
-	getSessionInfoHandler *RouteHandler.GetSessionInfoHandler,
-	getActiveConnectionInfoHandler *RouteHandler.GetActiveConnectionInfoHandler,
+	registerHandler *session.RegisterSessionHandler,
+	sendMessageHandler *message.SendTextMessageHandler,
+	sendImageHandler *message.SendImageHandler,
+	getQRImageHandler *qr.GetQRImageHandler,
+	getSessionInfoHandler *session.GetSessionInfoHandler,
+	getActiveConnectionInfoHandler *connection.GetActiveConnectionInfoHandler,
 ) error {
 	cors := handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-type"}),
@@ -133,15 +136,6 @@ func runServer(
 		return err
 	}
 	return nil
-}
-
-func initRedis(redisHost string) (*redis.Client, error) {
-	redisClient := redis.NewClient(&redis.Options{Addr: redisHost})
-	_, err := redisClient.Ping().Result()
-	if err != nil {
-		return nil, err
-	}
-	return redisClient, nil
 }
 
 func initSentry(dsn string) error {
