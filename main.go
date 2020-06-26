@@ -26,7 +26,6 @@ import (
 )
 
 func main() {
-
 	conf, err := config.New()
 	if err != nil {
 		log.Fatal(err)
@@ -55,12 +54,17 @@ func main() {
 
 	connSupervisor := supervisor.NewConnectionsSupervisor(time.Duration(conf.ConnectionsCheckoutDuration))
 
-	a, err := auth.NewAuth(conf.FileSystemRootPath+"/qr-codes", time.Duration(conf.ConnectionTimeout)*time.Second, sessionWorks, connSupervisor)
+	a, err := auth.NewAuth(
+		conf.FileSystemRootPath+"/qr-codes",
+		time.Duration(conf.ConnectionTimeout)*time.Second,
+		sessionWorks,
+		connSupervisor,
+	)
 	if err != nil {
 		log.Fatalf("can't create service `a`: %v\n", err)
 	}
 
-	l := listener.NewListener(sessionWorks, connSupervisor, a, conf.WebHookUrl, redisClient)
+	l := listener.NewListener(sessionWorks, connSupervisor, a, conf.WebHookURL, redisClient)
 
 	registerHandler := session.NewRegisterSessionHandler(a, l, sessionWorks)
 	log.Print("trying to auto connect saved sessions if exist...")
@@ -76,12 +80,12 @@ func main() {
 
 	err = runServer(
 		conf,
-		registerHandler,
-		sendMessageHandler,
-		sendImageHandler,
-		getQRImageHandler,
-		getSessionInfoHandler,
-		getActiveConnectionInfoHandler,
+		*registerHandler,
+		*sendMessageHandler,
+		*sendImageHandler,
+		*getQRImageHandler,
+		*getSessionInfoHandler,
+		*getActiveConnectionInfoHandler,
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -90,12 +94,12 @@ func main() {
 
 func runServer(
 	conf *config.Config,
-	registerHandler *session.RegisterSessionHandler,
-	sendMessageHandler *message.SendTextMessageHandler,
-	sendImageHandler *message.SendImageHandler,
-	getQRImageHandler *qr.GetQRImageHandler,
-	getSessionInfoHandler *session.GetSessionInfoHandler,
-	getActiveConnectionInfoHandler *connection.GetActiveConnectionInfoHandler,
+	registerHandler session.RegisterSessionHandler,
+	sendMessageHandler message.SendTextMessageHandler,
+	sendImageHandler message.SendImageHandler,
+	getQRImageHandler qr.GetQRImageHandler,
+	getSessionInfoHandler session.GetSessionInfoHandler,
+	getActiveConnectionInfoHandler connection.GetActiveConnectionInfoHandler,
 ) error {
 	cors := handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-type"}),
@@ -105,12 +109,12 @@ func runServer(
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(cors)
 
-	router.Handle("/register-session/", registerHandler).Methods("POST")
-	router.Handle("/send-message/", sendMessageHandler).Methods("POST")
-	router.Handle("/send-image/", sendImageHandler).Methods("POST")
-	router.Handle("/get-qr-code/{sessionId}/", getQRImageHandler).Methods("GET")
-	router.Handle("/get-session-info/{sessionId}/", getSessionInfoHandler).Methods("GET")
-	router.Handle("/get-active-connection-info/{sessionId}/", getActiveConnectionInfoHandler).Methods("GET")
+	router.Handle("/register-session/", &registerHandler).Methods("POST")
+	router.Handle("/send-message/", &sendMessageHandler).Methods("POST")
+	router.Handle("/send-image/", &sendImageHandler).Methods("POST")
+	router.Handle("/get-qr-code/{sessionId}/", &getQRImageHandler).Methods("GET")
+	router.Handle("/get-session-info/{sessionId}/", &getSessionInfoHandler).Methods("GET")
+	router.Handle("/get-active-connection-info/{sessionId}/", &getActiveConnectionInfoHandler).Methods("GET")
 
 	var err error
 	certFileExists, certKeyExists := true, true
@@ -122,15 +126,17 @@ func runServer(
 	}
 
 	if conf.Env == config.DevMode {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{
+			InsecureSkipVerify: true, // nolint
+		}
 	}
 
 	if !certFileExists || !certKeyExists {
-		log.Printf("wapi will handle request by unsecured connection. Wapi's listening at %s ...\n", conf.ListenHttpHost)
-		err = http.ListenAndServe(conf.ListenHttpHost, router)
+		log.Printf("wapi will handle request by unsecured connection. Wapi's listening at %s ...\n", conf.ListenHTTPHost)
+		err = http.ListenAndServe(conf.ListenHTTPHost, router)
 	} else {
-		log.Printf("wapi's listening at %s ...\n", conf.ListenHttpHost)
-		err = http.ListenAndServeTLS(conf.ListenHttpHost, conf.CertFilePath, conf.CertKeyPath, router)
+		log.Printf("wapi's listening at %s ...\n", conf.ListenHTTPHost)
+		err = http.ListenAndServeTLS(conf.ListenHTTPHost, conf.CertFilePath, conf.CertKeyPath, router)
 	}
 	if err != nil {
 		return err

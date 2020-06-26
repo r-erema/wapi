@@ -3,6 +3,6 @@ package session
 import "github.com/Rhymen/go-whatsapp"
 
 type WapiSession struct {
-	SessionId       string
+	SessionID       string
 	WhatsAppSession *whatsapp.Session
 }

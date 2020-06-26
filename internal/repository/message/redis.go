@@ -21,24 +21,25 @@ func NewRedisRepository(host string) (*RedisRepository, error) {
 	return &RedisRepository{client: redisClient, storeExpirationTime: time.Hour * 24 * 30}, nil
 }
 
-func (r *RedisRepository) SaveMessageTime(msgId string, msgTime time.Time) error {
-	return r.client.Set(timeKey(msgId), msgTime.UnixNano(), r.storeExpirationTime).Err()
+func (r *RedisRepository) SaveMessageTime(msgID string, msgTime time.Time) error {
+	return r.client.Set(timeKey(msgID), msgTime.UnixNano(), r.storeExpirationTime).Err()
 }
 
-func (r *RedisRepository) GetMessageTime(msgId string) (time.Time, error) {
-	timestamp, err := r.client.Get(timeKey(msgId)).Result()
+func (r *RedisRepository) GetMessageTime(msgID string) (*time.Time, error) {
+	timestamp, err := r.client.Get(timeKey(msgID)).Result()
 	if err != nil {
-		return time.Time{}, err
+		return nil, err
 	}
 
 	ts, err := strconv.ParseInt(timestamp, 10, 64)
 	if err != nil {
-		return time.Time{}, err
+		return nil, err
 	}
 
-	return time.Unix(ts, 0), nil
+	t := time.Unix(ts, 0)
+	return &t, nil
 }
 
-func timeKey(msgId string) string {
-	return "msg_timestamp:" + msgId
+func timeKey(msgID string) string {
+	return "msg_timestamp:" + msgID
 }

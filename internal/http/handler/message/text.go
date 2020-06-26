@@ -16,12 +16,11 @@ type SendTextMessageHandler struct {
 	connectionsSupervisor supervisor.ConnectionSupervisor
 }
 
-func NewSendMessageHandler(auth auth.Authorizer, connectionsSupervisor supervisor.ConnectionSupervisor) *SendTextMessageHandler {
-	return &SendTextMessageHandler{auth: auth, connectionsSupervisor: connectionsSupervisor}
+func NewSendMessageHandler(authorizer auth.Authorizer, connectionsSupervisor supervisor.ConnectionSupervisor) *SendTextMessageHandler {
+	return &SendTextMessageHandler{auth: authorizer, connectionsSupervisor: connectionsSupervisor}
 }
 
 func (handler *SendTextMessageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
 	decoder := json.NewDecoder(r.Body)
 	var msgReq SendMessageRequest
 	err := decoder.Decode(&msgReq)
@@ -32,7 +31,7 @@ func (handler *SendTextMessageHandler) ServeHTTP(w http.ResponseWriter, r *http.
 		return
 	}
 
-	sessConnDTO, err := handler.connectionsSupervisor.GetAuthenticatedConnectionForSession(msgReq.SessionId)
+	sessConnDTO, err := handler.connectionsSupervisor.GetAuthenticatedConnectionForSession(msgReq.SessionID)
 	if err != nil {
 		errorPrefix := "session not registered"
 		http.Error(w, errorPrefix, http.StatusBadRequest)
@@ -43,7 +42,7 @@ func (handler *SendTextMessageHandler) ServeHTTP(w http.ResponseWriter, r *http.
 
 	message := whatsapp.TextMessage{
 		Info: whatsapp.MessageInfo{
-			RemoteJid: msgReq.ChatId,
+			RemoteJid: msgReq.ChatID,
 			SenderJid: wac.Info.Wid,
 		},
 		Text: msgReq.Text,
@@ -55,10 +54,10 @@ func (handler *SendTextMessageHandler) ServeHTTP(w http.ResponseWriter, r *http.
 		http.Error(w, errorPrefix, http.StatusInternalServerError)
 		log.Printf("%s: %v\n", errorPrefix, err)
 	}
-	log.Printf("message sent to %s by session %s \n", msgReq.ChatId, msgReq.SessionId)
+	log.Printf("message sent to %s by session %s \n", msgReq.ChatID, msgReq.SessionID)
 	responseBody, err := json.Marshal(&message)
 	if err != nil {
-		log.Println("error message marshalling", err)
+		log.Println("error message marshaling", err)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(responseBody)
@@ -68,11 +67,10 @@ func (handler *SendTextMessageHandler) ServeHTTP(w http.ResponseWriter, r *http.
 		log.Printf("%s: %v\n", errorPrefix, err)
 		return
 	}
-
 }
 
 type SendMessageRequest struct {
-	ChatId    string `json:"chat_id"`
+	ChatID    string `json:"chat_id"`
 	Text      string `json:"text"`
-	SessionId string `json:"session_name"`
+	SessionID string `json:"session_name"`
 }

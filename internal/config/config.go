@@ -7,10 +7,10 @@ import (
 )
 
 const (
-	ListenHttpHostEnvVarKey     = "WAPI_INTERNAL_HOST"
+	ListenHTTPHostEnvVarKey     = "WAPI_INTERNAL_HOST"
 	WhatsAppConnectionTimeout   = "WAPI_WHATSAPP_CONNECTION_TIMEOUT"
 	FileSystemRootPoint         = "WAPI_FILE_SYSTEM_ROOT_POINT_FULL_PATH"
-	WebHookUrl                  = "WAPI_GETTING_MESSAGES_WEBHOOK"
+	WebHookURL                  = "WAPI_GETTING_MESSAGES_WEBHOOK"
 	RedisHost                   = "WAPI_REDIS_HOST"
 	Env                         = "WAPI_ENV"
 	CertFilePath                = "WAPI_CERT_FILE_PATH"
@@ -23,13 +23,13 @@ const (
 )
 
 type Config struct {
-	ListenHttpHost,
+	ListenHTTPHost,
 	FileSystemRootPath,
-	WebHookUrl,
+	WebHookURL,
 	RedisHost,
 	Env,
 	CertFilePath,
-	HttpStaticFiles,
+	HTTPStaticFiles,
 	SentryDSN,
 	CertKeyPath string
 	ConnectionsCheckoutDuration,
@@ -45,9 +45,9 @@ func New() (*Config, error) {
 		return nil, fmt.Errorf("`%s` param allowed values: `%s`, `%s`", Env, DevMode, ProdMode)
 	}
 
-	listenHost := os.Getenv(ListenHttpHostEnvVarKey)
+	listenHost := os.Getenv(ListenHTTPHostEnvVarKey)
 	if listenHost == "" {
-		return nil, fmt.Errorf("required evironment variable `%s` isn't set", ListenHttpHostEnvVarKey)
+		return nil, fmt.Errorf("required evironment variable `%s` isn't set", ListenHTTPHostEnvVarKey)
 	}
 
 	checkoutDuration, err := strconv.ParseInt(os.Getenv(ConnectionsCheckoutDuration), 10, 64)
@@ -70,19 +70,19 @@ func New() (*Config, error) {
 		return nil, fmt.Errorf("required evironment variable `%s` isn't set", RedisHost)
 	}
 
-	webHookUrl := os.Getenv(WebHookUrl)
-	if webHookUrl == "" {
-		return nil, fmt.Errorf("required evironment variable `%s` isn't set", WebHookUrl)
+	webHookURL := os.Getenv(WebHookURL)
+	if webHookURL == "" {
+		return nil, fmt.Errorf("required evironment variable `%s` isn't set", WebHookURL)
 	}
-	if webHookUrl[len(webHookUrl)-1:] != "/" {
-		return nil, fmt.Errorf("variable `%s` must contain trailing slash", WebHookUrl)
+	if webHookURL[len(webHookURL)-1:] != "/" {
+		return nil, fmt.Errorf("variable `%s` must contain trailing slash", WebHookURL)
 	}
 
 	return &Config{
-		ListenHttpHost:              listenHost,
+		ListenHTTPHost:              listenHost,
 		ConnectionTimeout:           connectionTimeout,
 		FileSystemRootPath:          filesRootPath,
-		WebHookUrl:                  webHookUrl,
+		WebHookURL:                  webHookURL,
 		RedisHost:                   redisHost,
 		Env:                         env,
 		CertFilePath:                os.Getenv(CertFilePath),

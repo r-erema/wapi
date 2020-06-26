@@ -17,32 +17,31 @@ type SendImageHandler struct {
 	connectionsSupervisor supervisor.ConnectionSupervisor
 }
 
-func NewSendImageHandler(auth auth.Authorizer, connectionsSupervisor supervisor.ConnectionSupervisor) *SendImageHandler {
-	return &SendImageHandler{auth: auth, connectionsSupervisor: connectionsSupervisor}
+func NewSendImageHandler(authorizer auth.Authorizer, connectionsSupervisor supervisor.ConnectionSupervisor) *SendImageHandler {
+	return &SendImageHandler{auth: authorizer, connectionsSupervisor: connectionsSupervisor}
 }
 
 func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
 	decoder := json.NewDecoder(r.Body)
 	var msgReq SendImageRequest
 	err := decoder.Decode(&msgReq)
 	if err != nil {
-		errorPrefix := "can't decode request"
+		const errorPrefix = "can't decode request"
 		http.Error(w, errorPrefix, http.StatusBadRequest)
 		log.Printf("%s: %v\n", errorPrefix, err)
 		return
 	}
 
-	sessConnDTO, err := handler.connectionsSupervisor.GetAuthenticatedConnectionForSession(msgReq.SessionId)
+	sessConnDTO, err := handler.connectionsSupervisor.GetAuthenticatedConnectionForSession(msgReq.SessionID)
 	if err != nil {
-		errorPrefix := "session not registered"
+		const errorPrefix = "session not registered"
 		http.Error(w, errorPrefix, http.StatusBadRequest)
 		log.Printf("%s: %v\n", errorPrefix, err)
 		return
 	}
 	wac := sessConnDTO.GetWac()
 
-	response, err := http.Get(msgReq.ImageUrl)
+	response, err := http.Get(msgReq.ImageURL)
 	if err != nil {
 		errorPrefix := "image url error"
 		http.Error(w, errorPrefix, http.StatusBadRequest)
@@ -65,7 +64,7 @@ func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 
 	message := whatsapp.ImageMessage{
 		Info: whatsapp.MessageInfo{
-			RemoteJid: msgReq.ChatId,
+			RemoteJid: msgReq.ChatID,
 			SenderJid: wac.Info.Wid,
 		},
 		Type:    http.DetectContentType(img),
@@ -75,29 +74,28 @@ func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 
 	_, err = wac.Send(message)
 	if err != nil {
-		errorPrefix := "sending message error"
+		const errorPrefix = "sending message error"
 		http.Error(w, errorPrefix, http.StatusInternalServerError)
 		log.Printf("%s: %v\n", errorPrefix, err)
 	}
-	log.Printf("message sent to %s by session %s \n", msgReq.ChatId, msgReq.SessionId)
+	log.Printf("message sent to %s by session %s \n", msgReq.ChatID, msgReq.SessionID)
 	responseBody, err := json.Marshal(&message)
 	if err != nil {
-		log.Println("error message marshalling", err)
+		log.Println("error message marshaling", err)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(responseBody)
 	if err != nil {
-		errorPrefix := "can't write body to response"
+		const errorPrefix = "can't write body to response"
 		http.Error(w, errorPrefix, http.StatusInternalServerError)
 		log.Printf("%s: %v\n", errorPrefix, err)
 		return
 	}
-
 }
 
 type SendImageRequest struct {
-	SessionId string `json:"session_name"`
-	ChatId    string `json:"chat_id"`
-	ImageUrl  string `json:"image_url"`
+	SessionID string `json:"session_name"`
+	ChatID    string `json:"chat_id"`
+	ImageURL  string `json:"image_url"`
 	Caption   string `json:"caption"`
 }

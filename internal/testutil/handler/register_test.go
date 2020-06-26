@@ -8,12 +8,9 @@ import (
 	"testing"
 
 	"github.com/r-erema/wapi/internal/http/handler/session"
-	session2 "github.com/r-erema/wapi/internal/model/session"
-	_ "github.com/r-erema/wapi/internal/testutil/mock/auth"
+	sessionModel "github.com/r-erema/wapi/internal/model/session"
 	mockAuth "github.com/r-erema/wapi/internal/testutil/mock/auth"
-	_ "github.com/r-erema/wapi/internal/testutil/mock/listener"
 	mockListener "github.com/r-erema/wapi/internal/testutil/mock/listener"
-	_ "github.com/r-erema/wapi/internal/testutil/mock/session"
 	mockSession "github.com/r-erema/wapi/internal/testutil/mock/session"
 
 	"github.com/Rhymen/go-whatsapp"
@@ -21,7 +18,6 @@ import (
 )
 
 func TestRegisterSessionSuccess(t *testing.T) {
-
 	handler := session.NewRegisterSessionHandler(prepareMocks(t))
 	r := httptest.NewRequest(
 		"POST",
@@ -41,10 +37,10 @@ func prepareMocks(t *testing.T) (
 	listener *mockListener.MockListener,
 	sessionWorks *mockSession.MockRepository,
 ) {
-	sessionId := "session_id_token_81E25FCF8393C916D131A81C60AFFEB11"
+	sessionID := "session_id_token_81E25FCF8393C916D131A81C60AFFEB11"
 	mockCtrl := gomock.NewController(t)
 	auth = mockAuth.NewMockAuthorizer(mockCtrl)
-	auth.EXPECT().Login(sessionId).Return(&whatsapp.Conn{}, &session2.WapiSession{}, nil)
+	auth.EXPECT().Login(sessionID).Return(&whatsapp.Conn{}, &sessionModel.WapiSession{}, nil)
 
 	listener = mockListener.NewMockListener(mockCtrl)
 	listener.EXPECT().

@@ -5,8 +5,8 @@ import (
 )
 
 type Repository interface {
-	ReadSession(sessionId string) (*session.WapiSession, error)
+	ReadSession(sessionID string) (*session.WapiSession, error)
 	WriteSession(session *session.WapiSession) error
 	GetAllSavedSessionIds() ([]string, error)
-	RemoveSession(sessionId string) error
+	RemoveSession(sessionID string) error
 }

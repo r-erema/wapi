@@ -12,54 +12,51 @@ import (
 	sessionRepo "github.com/r-erema/wapi/internal/repository/session"
 	"github.com/r-erema/wapi/internal/service/auth"
 	"github.com/r-erema/wapi/internal/service/supervisor"
-
-	_ "github.com/thoas/go-funk"
 )
 
 type Listener interface {
-	ListenForSession(sessionId string, wg *sync.WaitGroup)
+	ListenForSession(sessionID string, wg *sync.WaitGroup) (gracefulDone bool, err error)
 }
 
-type listener struct {
+type WebHook struct {
 	sessionWorks          sessionRepo.Repository
 	connectionsSupervisor supervisor.ConnectionSupervisor
 	auth                  auth.Authorizer
-	webhookUrl            string
+	webhookURL            string
 	msgRepo               message.Repository
 }
 
 func NewListener(
 	sessionWorks sessionRepo.Repository,
 	connectionsSupervisor supervisor.ConnectionSupervisor,
-	auth auth.Authorizer,
-	webhookUrl string,
+	authorizer auth.Authorizer,
+	webhookURL string,
 	msgRepo message.Repository,
-) *listener {
-	return &listener{
+) *WebHook {
+	return &WebHook{
 		sessionWorks:          sessionWorks,
 		connectionsSupervisor: connectionsSupervisor,
-		auth:                  auth,
-		webhookUrl:            webhookUrl,
+		auth:                  authorizer,
+		webhookURL:            webhookURL,
 		msgRepo:               msgRepo,
 	}
 }
 
-func (l *listener) ListenForSession(sessionId string, wg *sync.WaitGroup) {
-
-	_, err := l.connectionsSupervisor.GetAuthenticatedConnectionForSession(sessionId)
+func (l *WebHook) ListenForSession(sessionID string, wg *sync.WaitGroup) (gracefulDone bool, err error) {
+	_, err = l.connectionsSupervisor.GetAuthenticatedConnectionForSession(sessionID)
 	if err == nil {
-		log.Printf("Session `%s` is already listenning", sessionId)
-		return
+		log.Printf("Session `%s` is already listenning", sessionID)
+		return false, err
 	}
 
-	wac, session2, err := l.auth.Login(sessionId)
+	wac, session2, err := l.auth.Login(sessionID)
 	if err != nil || wac == nil || session2 == nil {
-		log.Printf("login failed in message listener: %v\n", err)
+		log.Printf("login failed in message ListenerWebHook: %v\n", err)
 		wg.Done()
-		return
+		return false, err
 	}
 
-	log.Printf("start listening messages for sessionRepo `%s`, bound login: `%s`", session2.SessionId, session2.WhatsAppSession.Wid)
+	log.Printf("start listening messages for sessionRepo `%s`, bound login: `%s`", session2.SessionID, session2.WhatsAppSession.Wid)
 
 	wac.AddHandler(NewHandler(
 		wac,
@@ -68,7 +65,7 @@ func (l *listener) ListenForSession(sessionId string, wg *sync.WaitGroup) {
 		l.connectionsSupervisor,
 		l.sessionWorks,
 		uint64(time.Now().Unix()),
-		l.webhookUrl,
+		l.webhookURL,
 	))
 
 	c := make(chan os.Signal, 1)
@@ -80,10 +77,11 @@ func (l *listener) ListenForSession(sessionId string, wg *sync.WaitGroup) {
 	session2.WhatsAppSession = &waSession
 	if err != nil {
 		log.Printf("error disconnecting: %v\n", err)
-		return
+		return false, err
 	}
 	if err := l.sessionWorks.WriteSession(session2); err != nil {
 		log.Printf("error saving sessionRepo: %v", err)
-		return
+		return false, err
 	}
+	return true, nil
 }

@@ -18,11 +18,11 @@ type RegisterSessionHandler struct {
 }
 
 func NewRegisterSessionHandler(
-	auth auth.Authorizer,
-	listener listener.Listener,
+	authorizer auth.Authorizer,
+	l listener.Listener,
 	sessionWorks session2.Repository,
 ) *RegisterSessionHandler {
-	return &RegisterSessionHandler{auth: auth, listener: listener, sessionWorks: sessionWorks}
+	return &RegisterSessionHandler{auth: authorizer, listener: l, sessionWorks: sessionWorks}
 }
 
 func (handler *RegisterSessionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -36,29 +36,37 @@ func (handler *RegisterSessionHandler) ServeHTTP(w http.ResponseWriter, r *http.
 		log.Printf(`%v: %v`, errPrefix, err)
 		return
 	}
-	if registerSession.SessionId == "" {
+	if registerSession.SessionID == "" {
 		errPrefix := "couldn't decode session_id param"
 		http.Error(w, errPrefix, http.StatusBadRequest)
 		log.Printf(`%v: %v`, errPrefix, err)
 		return
 	}
 
-	if err = handler.startListenIncomingMessages(registerSession.SessionId); err != nil {
+	if err = handler.startListenIncomingMessages(registerSession.SessionID); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Printf(`%v`, err)
 	}
-
 }
 
-func (handler *RegisterSessionHandler) startListenIncomingMessages(sessionId string) error {
+func (handler *RegisterSessionHandler) startListenIncomingMessages(sessionID string) error {
 	var wg sync.WaitGroup
 	wg.Add(1)
+	errChan := make(chan error)
 	go func(sid string) {
-		handler.listener.ListenForSession(sid, &wg)
-	}(sessionId)
+		_, err := handler.listener.ListenForSession(sid, &wg)
+		if err != nil {
+			errChan <- err
+		}
+	}(sessionID)
 	wg.Wait()
 
-	return nil
+	select {
+	case err := <-errChan:
+		return err
+	default:
+		return nil
+	}
 }
 
 func (handler *RegisterSessionHandler) TryToAutoConnectAllSessions() error {
@@ -66,14 +74,14 @@ func (handler *RegisterSessionHandler) TryToAutoConnectAllSessions() error {
 	if err != nil {
 		return err
 	}
-	for _, sessionId := range sessionIds {
-		if err := handler.startListenIncomingMessages(sessionId); err != nil {
-			log.Printf("unable to auto connect session `%s`: %v", sessionId, err)
+	for _, sessionID := range sessionIds {
+		if err := handler.startListenIncomingMessages(sessionID); err != nil {
+			log.Printf("unable to auto connect session `%s`: %v", sessionID, err)
 		}
 	}
 	return nil
 }
 
 type RegisterSessionRequest struct {
-	SessionId string `json:"session_id"`
+	SessionID string `json:"session_id"`
 }

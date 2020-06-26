@@ -23,8 +23,8 @@ func NewGetQRImageHandler(qrFileResolver file.QRFileResolver) *GetQRImageHandler
 
 func (handler *GetQRImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	sessionId := params["sessionId"]
-	qrImagePath := handler.qrFileResolver.ResolveQrFilePath(sessionId)
+	sessionID := params["sessionID"]
+	qrImagePath := handler.qrFileResolver.ResolveQrFilePath(sessionID)
 	if _, err := os.Stat(qrImagePath); os.IsNotExist(err) {
 		errPrefix := "QR image not found"
 		http.Error(w, errPrefix, http.StatusNotFound)

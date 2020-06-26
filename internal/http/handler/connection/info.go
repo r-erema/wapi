@@ -21,8 +21,8 @@ func NewGetActiveConnectionInfoHandler(connectionSupervisor supervisor.Connectio
 
 func (handler *GetActiveConnectionInfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	sessionId := params["sessionId"]
-	result, err := handler.connectionSupervisor.GetAuthenticatedConnectionForSession(sessionId)
+	sessionID := params["sessionID"]
+	result, err := handler.connectionSupervisor.GetAuthenticatedConnectionForSession(sessionID)
 	if err != nil {
 		errPrefix := "can't find active connection"
 		http.Error(w, errPrefix, http.StatusNotFound)
@@ -37,7 +37,7 @@ func (handler *GetActiveConnectionInfoHandler) ServeHTTP(w http.ResponseWriter, 
 		log.Printf("%s: %v", errPrefix, err)
 		return
 	}
-	log.Printf("connection info for session `%s` sent", sessionId)
+	log.Printf("connection info for session `%s` sent", sessionID)
 }
 
 type Resp struct {

@@ -20,8 +20,8 @@ func NewGetSessionInfoHandler(sessionWork sessionRepo.Repository) *GetSessionInf
 
 func (handler *GetSessionInfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	sessionId := params["sessionId"]
-	session, err := handler.sessionWork.ReadSession(sessionId)
+	sessionID := params["sessionID"]
+	session, err := handler.sessionWork.ReadSession(sessionID)
 	if err != nil {
 		if _, ok := err.(*os.PathError); ok {
 			http.Error(w, "session not found", http.StatusNotFound)

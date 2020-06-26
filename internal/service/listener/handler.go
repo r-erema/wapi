@@ -18,6 +18,8 @@ import (
 	"github.com/getsentry/sentry-go"
 )
 
+const SentryFlushTimeoutSeconds = 5
+
 type Handler struct {
 	Connection            *whatsapp.Conn
 	Session               *session.WapiSession
@@ -25,136 +27,143 @@ type Handler struct {
 	connectionsSupervisor supervisor.ConnectionSupervisor
 	sessionWorks          session2.Repository
 	InitTimestamp         uint64
-	WebhookUrl            string
+	WebhookURL            string
 }
 
 func NewHandler(
 	connection *whatsapp.Conn,
-	session *session.WapiSession,
+	wapiSession *session.WapiSession,
 	messageRepo message.Repository,
 	connectionsSupervisor supervisor.ConnectionSupervisor,
 	sessionWorks session2.Repository,
 	initTimestamp uint64,
-	webhookUrl string,
+	webhookURL string,
 ) *Handler {
 	return &Handler{
 		Connection:            connection,
-		Session:               session,
+		Session:               wapiSession,
 		messageRepo:           messageRepo,
 		InitTimestamp:         initTimestamp,
-		WebhookUrl:            webhookUrl,
+		WebhookURL:            webhookURL,
 		connectionsSupervisor: connectionsSupervisor,
 		sessionWorks:          sessionWorks,
 	}
 }
 
 func (h *Handler) HandleError(err error) {
-	reconnect := func(afterSeconds time.Duration) {
-
-		pong, err := h.Connection.AdminTest()
+	reconnect := func(interval time.Duration) {
+		var pong bool
+		pong, err = h.Connection.AdminTest()
 		if !pong || (err != nil && err == whatsapp.ErrNotConnected) {
-			h.connectionsSupervisor.RemoveConnectionForSession(h.Session.SessionId)
-			_ = h.sessionWorks.RemoveSession(h.Session.SessionId)
-			log.Printf("device isn't responding, session will be removed, reconnection cancelled: %v", err)
+			h.connectionsSupervisor.RemoveConnectionForSession(h.Session.SessionID)
+			_ = h.sessionWorks.RemoveSession(h.Session.SessionID)
+			log.Printf("device isn't responding, session will be removed, reconnection canceled: %v", err)
 			sentry.CaptureException(fmt.Errorf(
 				"device lost connection, need to connect manually (by QR-code) `%s`, login: `%s`: %v",
-				h.Session.SessionId,
+				h.Session.SessionID,
 				h.Connection.Info.Wid,
 				err,
 			))
-			sentry.Flush(time.Second * 5)
+			sentry.Flush(time.Second * SentryFlushTimeoutSeconds)
 			return
 		}
 
-		log.Printf("waiting %d sec...\n", afterSeconds)
-		<-time.After(afterSeconds * time.Second)
+		log.Printf("waiting %d sec...\n", interval)
+		<-time.After(interval * time.Second)
 		log.Println("reconnecting...")
 		_, err = h.Connection.RestoreWithSession(*h.Session.WhatsAppSession)
 		if err != nil {
-			log.Printf("restore failed, session `%v`: %v", h.Session.SessionId, err)
+			log.Printf("restore failed, session `%v`: %v", h.Session.SessionID, err)
 			sentry.CaptureException(fmt.Errorf(
 				"couldn't restore connection for session `%s`, login: `%s`: %v",
-				h.Session.SessionId,
+				h.Session.SessionID,
 				h.Connection.Info.Wid,
 				err,
 			))
-			sentry.Flush(time.Second * 5)
+			sentry.Flush(time.Second * SentryFlushTimeoutSeconds)
 		} else {
 			log.Println("ok")
 		}
 	}
 
 	if e, ok := err.(*whatsapp.ErrConnectionClosed); ok {
-		log.Printf("connection closed for session `%s`, code: %v, text: %v", h.Session.SessionId, e.Code, e.Text)
+		log.Printf("connection closed for session `%s`, code: %v, text: %v", h.Session.SessionID, e.Code, e.Text)
 		reconnect(1)
-	} else if e, ok := err.(*whatsapp.ErrConnectionFailed); ok {
-		log.Printf("connection failed for session `%s`, underlying error: %v", h.Session.SessionId, e.Err)
-		reconnect(30)
-	} else {
-		log.Printf("warning: %v\n", err)
+		return
 	}
+
+	if e, ok := err.(*whatsapp.ErrConnectionFailed); ok {
+		log.Printf("connection failed for session `%s`, underlying error: %v", h.Session.SessionID, e.Err)
+
+		timeOut := time.Second * 30
+		reconnect(timeOut)
+		return
+	}
+
+	log.Printf("warning: %v\n", err)
 }
 
-func (h *Handler) HandleTextMessage(message whatsapp.TextMessage) {
-
+func (h *Handler) HandleTextMessage(msg *whatsapp.TextMessage) {
 	if h.InitTimestamp == 0 {
 		h.InitTimestamp = uint64(time.Now().Unix())
 	}
 
-	if !h.isMessageAllowedToHandle(message) {
+	if !h.isMessageAllowedToHandle(msg) {
 		return
 	}
 
-	log.Printf("got message to handle from `%v`, destination `%v`", message.Info.RemoteJid, h.Session.WhatsAppSession.Wid)
+	log.Printf("got msg to handle from `%v`, destination `%v`", msg.Info.RemoteJid, h.Session.WhatsAppSession.Wid)
 
-	if message.Info.FromMe {
+	if msg.Info.FromMe {
 		return
 	}
 
-	webhookUrl := h.WebhookUrl + h.Session.SessionId
-
-	requestBody, err := json.Marshal(&message)
+	requestBody, err := json.Marshal(&msg)
 	if err != nil {
-		log.Println("error message marshalling", err)
+		log.Println("error msg marshaling", err)
 	}
-	resp, err := http.Post(webhookUrl, "application/json", bytes.NewBuffer(requestBody))
+	resp, err := http.Post(h.SessionWebhookURL(), "application/json", bytes.NewBuffer(requestBody))
 
-	if nil != err {
+	if err != nil {
 		log.Println("error happened getting the response", err)
 		return
 	}
 
-	err = h.messageRepo.SaveMessageTime("wapi_sent_message:"+message.Info.Id, time.Now())
+	err = h.messageRepo.SaveMessageTime("wapi_sent_message:"+msg.Info.Id, time.Now())
 	if err != nil {
-		log.Printf("can't store message id `%s` in redis: %v\n", message.Info.Id, err)
+		log.Printf("can't store msg id `%s` in redis: %v\n", msg.Info.Id, err)
 	}
-	log.Printf("message sent to `%s`, by session `%s`, login `%s`", webhookUrl, h.Session.SessionId, h.Session.WhatsAppSession.Wid)
+	log.Printf("msg sent to `%s`, by session `%s`, login `%s`", h.SessionWebhookURL(), h.Session.SessionID, h.Session.WhatsAppSession.Wid)
 
 	defer func() {
 		_ = resp.Body.Close()
 	}()
 	_, err = ioutil.ReadAll(resp.Body)
 
-	if nil != err {
+	if err != nil {
 		fmt.Println("error happened reading the body", err)
 		return
 	}
 }
 
-func (h *Handler) isMessageAllowedToHandle(message whatsapp.TextMessage) bool {
-	if h.messageAlreadySent(message.Info.Id) {
+func (h *Handler) isMessageAllowedToHandle(msg *whatsapp.TextMessage) bool {
+	if h.messageAlreadySent(msg.Info.Id) {
 		return false
 	}
-	if message.Info.Timestamp <= h.InitTimestamp {
+	if msg.Info.Timestamp <= h.InitTimestamp {
 		return false
 	}
-	if message.Info.FromMe {
+	if msg.Info.FromMe {
 		return false
 	}
 	return true
 }
 
-func (h *Handler) messageAlreadySent(messageId string) bool {
-	_, err := h.messageRepo.GetMessageTime("wapi_sent_message:" + messageId)
+func (h *Handler) messageAlreadySent(messageID string) bool {
+	_, err := h.messageRepo.GetMessageTime("wapi_sent_message:" + messageID)
 	return err == nil
+}
+
+func (h *Handler) SessionWebhookURL() string {
+	return h.WebhookURL + h.Session.SessionID
 }

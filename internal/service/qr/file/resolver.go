@@ -1,5 +1,5 @@
 package file
 
 type QRFileResolver interface {
-	ResolveQrFilePath(sessionId string) string
+	ResolveQrFilePath(sessionID string) string
 }

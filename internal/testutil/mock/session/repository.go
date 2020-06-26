@@ -5,10 +5,9 @@
 package mock_session
 
 import (
-	reflect "reflect"
-
 	gomock "github.com/golang/mock/gomock"
 	session "github.com/r-erema/wapi/internal/model/session"
+	reflect "reflect"
 )
 
 // MockRepository is a mock of Repository interface

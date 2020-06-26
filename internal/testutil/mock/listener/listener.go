@@ -5,10 +5,9 @@
 package mock_listener
 
 import (
+	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
 	sync "sync"
-
-	gomock "github.com/golang/mock/gomock"
 )
 
 // MockListener is a mock of Listener interface
@@ -35,9 +34,12 @@ func (m *MockListener) EXPECT() *MockListenerMockRecorder {
 }
 
 // ListenForSession mocks base method
-func (m *MockListener) ListenForSession(sessionId string, wg *sync.WaitGroup) {
+func (m *MockListener) ListenForSession(sessionId string, wg *sync.WaitGroup) (bool, error) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "ListenForSession", sessionId, wg)
+	ret := m.ctrl.Call(m, "ListenForSession", sessionId, wg)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ListenForSession indicates an expected call of ListenForSession

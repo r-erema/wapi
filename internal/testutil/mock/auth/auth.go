@@ -5,11 +5,10 @@
 package mock_auth
 
 import (
-	reflect "reflect"
-
 	whatsapp "github.com/Rhymen/go-whatsapp"
 	gomock "github.com/golang/mock/gomock"
 	session "github.com/r-erema/wapi/internal/model/session"
+	reflect "reflect"
 )
 
 // MockAuthorizer is a mock of Authorizer interface

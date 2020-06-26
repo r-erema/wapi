@@ -13,23 +13,23 @@ import (
 
 const sessionFileExt = ".gob"
 
-type fileSystemSession struct {
+type FileSystemSession struct {
 	sessionStoragePath string
 }
 
-func NewFileSystemSession(sessionStoragePath string) (*fileSystemSession, error) {
+func NewFileSystemSession(sessionStoragePath string) (*FileSystemSession, error) {
 	if _, err := os.Stat(sessionStoragePath); os.IsNotExist(err) {
 		err := os.MkdirAll(sessionStoragePath, os.ModePerm)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return &fileSystemSession{sessionStoragePath: sessionStoragePath}, nil
+	return &FileSystemSession{sessionStoragePath: sessionStoragePath}, nil
 }
 
-func (f fileSystemSession) ReadSession(sessionId string) (*session.WapiSession, error) {
+func (f FileSystemSession) ReadSession(sessionID string) (*session.WapiSession, error) {
 	ws := &session.WapiSession{}
-	file, err := os.Open(f.resolveSessionFilePath(sessionId))
+	file, err := os.Open(f.resolveSessionFilePath(sessionID))
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +47,8 @@ func (f fileSystemSession) ReadSession(sessionId string) (*session.WapiSession, 
 	return ws, nil
 }
 
-func (f fileSystemSession) WriteSession(session *session.WapiSession) error {
-	file, err := os.Create(f.resolveSessionFilePath(session.SessionId))
+func (f FileSystemSession) WriteSession(s *session.WapiSession) error {
+	file, err := os.Create(f.resolveSessionFilePath(s.SessionID))
 	if err != nil {
 		return err
 	}
@@ -59,14 +59,14 @@ func (f fileSystemSession) WriteSession(session *session.WapiSession) error {
 		}
 	}()
 	encoder := gob.NewEncoder(file)
-	err = encoder.Encode(session)
+	err = encoder.Encode(s)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (f fileSystemSession) GetAllSavedSessionIds() ([]string, error) {
+func (f FileSystemSession) GetAllSavedSessionIds() ([]string, error) {
 	var ids []string
 	files, err := ioutil.ReadDir(f.sessionStoragePath)
 	if err != nil {
@@ -82,13 +82,13 @@ func (f fileSystemSession) GetAllSavedSessionIds() ([]string, error) {
 	return ids, nil
 }
 
-func (f fileSystemSession) RemoveSession(sessionId string) error {
-	if err := os.Remove(f.resolveSessionFilePath(sessionId)); err != nil {
+func (f FileSystemSession) RemoveSession(sessionID string) error {
+	if err := os.Remove(f.resolveSessionFilePath(sessionID)); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (f fileSystemSession) resolveSessionFilePath(sessionId string) string {
-	return f.sessionStoragePath + "/" + sessionId + sessionFileExt
+func (f FileSystemSession) resolveSessionFilePath(sessionID string) string {
+	return f.sessionStoragePath + "/" + sessionID + sessionFileExt
 }
