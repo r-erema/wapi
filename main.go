@@ -32,7 +32,7 @@ func main() {
 	}
 
 	log.Print("connecting to redis...")
-	redisClient, err := messageRepo.NewRedisRepository(conf.RedisHost)
+	redisClient, err := messageRepo.NewRedis(conf.RedisHost)
 	if err != nil {
 		log.Fatalf("error of init redis repo: %v\n", err)
 	}
@@ -47,14 +47,14 @@ func main() {
 		log.Print("ok")
 	}
 
-	sessionWorks, err := sessionRepo.NewFileSystemSession(conf.FileSystemRootPath + "/sessions")
+	sessionWorks, err := sessionRepo.NewFileSystem(conf.FileSystemRootPath + "/sessions")
 	if err != nil {
 		log.Fatalf("can't create service `session`: %v\n", err)
 	}
 
-	connSupervisor := supervisor.NewConnectionsSupervisor(time.Duration(conf.ConnectionsCheckoutDuration))
+	connSupervisor := supervisor.New(time.Duration(conf.ConnectionsCheckoutDuration))
 
-	a, err := auth.NewAuth(
+	a, err := auth.New(
 		conf.FileSystemRootPath+"/qr-codes",
 		time.Duration(conf.ConnectionTimeout)*time.Second,
 		sessionWorks,
@@ -64,7 +64,7 @@ func main() {
 		log.Fatalf("can't create service `a`: %v\n", err)
 	}
 
-	l := listener.NewListener(sessionWorks, connSupervisor, a, conf.WebHookURL, redisClient)
+	l := listener.NewWebHook(sessionWorks, connSupervisor, a, conf.WebHookURL, redisClient)
 
 	registerHandler := session.NewRegisterSessionHandler(a, l, sessionWorks)
 	log.Print("trying to auto connect saved sessions if exist...")
@@ -72,11 +72,11 @@ func main() {
 		log.Fatalf("error while trying restore sesssions: %s", err)
 	}
 
-	sendMessageHandler := message.NewSendMessageHandler(a, connSupervisor)
-	sendImageHandler := message.NewSendImageHandler(a, connSupervisor)
-	getQRImageHandler := qr.NewGetQRImageHandler(a)
-	getSessionInfoHandler := session.NewGetSessionInfoHandler(sessionWorks)
-	getActiveConnectionInfoHandler := connection.NewGetActiveConnectionInfoHandler(connSupervisor)
+	sendMessageHandler := message.NewTextHandler(a, connSupervisor)
+	sendImageHandler := message.NewImageHandler(a, connSupervisor)
+	getQRImageHandler := qr.New(a)
+	getSessionInfoHandler := session.NewSessInfoHandler(sessionWorks)
+	getActiveConnectionInfoHandler := connection.New(connSupervisor)
 
 	err = runServer(
 		conf,
@@ -98,8 +98,8 @@ func runServer(
 	sendMessageHandler message.SendTextMessageHandler,
 	sendImageHandler message.SendImageHandler,
 	getQRImageHandler qr.GetQRImageHandler,
-	getSessionInfoHandler session.GetSessionInfoHandler,
-	getActiveConnectionInfoHandler connection.GetActiveConnectionInfoHandler,
+	getSessionInfoHandler session.SessInfoHandler,
+	getActiveConnectionInfoHandler connection.ActiveConnectionInfoHandler,
 ) error {
 	cors := handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-type"}),

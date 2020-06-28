@@ -26,7 +26,8 @@ type Auth struct {
 	connectionsSupervisor supervisor.ConnectionSupervisor
 }
 
-func NewAuth(
+// Creates Auth service.
+func New(
 	qrImagesFilesPath string,
 	timeoutConnection time.Duration,
 	sessionWorks sessionRepo.Repository,
@@ -47,6 +48,7 @@ func NewAuth(
 	}, nil
 }
 
+// Authorizes user whether by stored session file or by qr-code.
 func (auth *Auth) Login(sessionID string) (*whatsapp.Conn, *sessionModel.WapiSession, error) {
 	wac, err := whatsapp.NewConn(auth.timeoutConnection)
 	if err != nil {
@@ -90,7 +92,7 @@ func (auth *Auth) Login(sessionID string) (*whatsapp.Conn, *sessionModel.WapiSes
 
 	if err = auth.connectionsSupervisor.AddAuthenticatedConnectionForSession(
 		sessionID,
-		supervisor.NewSessionConnectionDTO(wac, wapiSession),
+		supervisor.NewDTO(wac, wapiSession),
 	); err != nil {
 		return nil, nil, fmt.Errorf("error adding connection to supervisor: %v", err)
 	}
@@ -102,6 +104,7 @@ func (auth *Auth) Login(sessionID string) (*whatsapp.Conn, *sessionModel.WapiSes
 	return wac, wapiSession, nil
 }
 
+// Returns path to image file of qr-code.
 func (auth *Auth) ResolveQrFilePath(sessionID string) string {
 	return auth.QrImagesFilesPath + "/qr_" + sessionID + ".png"
 }

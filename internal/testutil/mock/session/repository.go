@@ -62,19 +62,19 @@ func (mr *MockRepositoryMockRecorder) WriteSession(session interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteSession", reflect.TypeOf((*MockRepository)(nil).WriteSession), session)
 }
 
-// GetAllSavedSessionIds mocks base method
-func (m *MockRepository) GetAllSavedSessionIds() ([]string, error) {
+// AllSavedSessionIds mocks base method
+func (m *MockRepository) AllSavedSessionIds() ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllSavedSessionIds")
+	ret := m.ctrl.Call(m, "AllSavedSessionIds")
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetAllSavedSessionIds indicates an expected call of GetAllSavedSessionIds
+// AllSavedSessionIds indicates an expected call of AllSavedSessionIds
 func (mr *MockRepositoryMockRecorder) GetAllSavedSessionIds() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSavedSessionIds", reflect.TypeOf((*MockRepository)(nil).GetAllSavedSessionIds))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AllSavedSessionIds", reflect.TypeOf((*MockRepository)(nil).AllSavedSessionIds))
 }
 
 // RemoveSession mocks base method

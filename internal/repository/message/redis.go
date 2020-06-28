@@ -12,7 +12,8 @@ type RedisRepository struct {
 	storeExpirationTime time.Duration
 }
 
-func NewRedisRepository(host string) (*RedisRepository, error) {
+// Creates redis repository.
+func NewRedis(host string) (*RedisRepository, error) {
 	redisClient := redis.NewClient(&redis.Options{Addr: host})
 	_, err := redisClient.Ping().Result()
 	if err != nil {
@@ -21,10 +22,12 @@ func NewRedisRepository(host string) (*RedisRepository, error) {
 	return &RedisRepository{client: redisClient, storeExpirationTime: time.Hour * 24 * 30}, nil
 }
 
+// Stores message time in repository.
 func (r *RedisRepository) SaveMessageTime(msgID string, msgTime time.Time) error {
 	return r.client.Set(timeKey(msgID), msgTime.UnixNano(), r.storeExpirationTime).Err()
 }
 
+// Retrieves message time from repository.
 func (r *RedisRepository) GetMessageTime(msgID string) (*time.Time, error) {
 	timestamp, err := r.client.Get(timeKey(msgID)).Result()
 	if err != nil {

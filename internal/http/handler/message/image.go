@@ -17,7 +17,8 @@ type SendImageHandler struct {
 	connectionsSupervisor supervisor.ConnectionSupervisor
 }
 
-func NewSendImageHandler(authorizer auth.Authorizer, connectionsSupervisor supervisor.ConnectionSupervisor) *SendImageHandler {
+// Creates SendImageHandler.
+func NewImageHandler(authorizer auth.Authorizer, connectionsSupervisor supervisor.ConnectionSupervisor) *SendImageHandler {
 	return &SendImageHandler{auth: authorizer, connectionsSupervisor: connectionsSupervisor}
 }
 
@@ -32,14 +33,14 @@ func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	sessConnDTO, err := handler.connectionsSupervisor.GetAuthenticatedConnectionForSession(msgReq.SessionID)
+	sessConnDTO, err := handler.connectionsSupervisor.AuthenticatedConnectionForSession(msgReq.SessionID)
 	if err != nil {
 		const errorPrefix = "session not registered"
 		http.Error(w, errorPrefix, http.StatusBadRequest)
 		log.Printf("%s: %v\n", errorPrefix, err)
 		return
 	}
-	wac := sessConnDTO.GetWac()
+	wac := sessConnDTO.Wac()
 
 	response, err := http.Get(msgReq.ImageURL)
 	if err != nil {

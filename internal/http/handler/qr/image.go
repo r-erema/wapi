@@ -17,7 +17,8 @@ type GetQRImageHandler struct {
 	qrFileResolver file.QRFileResolver
 }
 
-func NewGetQRImageHandler(qrFileResolver file.QRFileResolver) *GetQRImageHandler {
+// Creates GetQRImageHandler.
+func New(qrFileResolver file.QRFileResolver) *GetQRImageHandler {
 	return &GetQRImageHandler{qrFileResolver: qrFileResolver}
 }
 

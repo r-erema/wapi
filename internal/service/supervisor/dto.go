@@ -12,15 +12,18 @@ type SessionConnectionDTO struct {
 	pingQuit *chan string
 }
 
-func (s SessionConnectionDTO) GetSession() *session2.WapiSession {
+// Gets session.
+func (s SessionConnectionDTO) Session() *session2.WapiSession {
 	return s.session
 }
 
-func (s SessionConnectionDTO) GetWac() *whatsapp.Conn {
+// Gets connection.
+func (s SessionConnectionDTO) Wac() *whatsapp.Conn {
 	return s.wac
 }
 
-func NewSessionConnectionDTO(wac *whatsapp.Conn, session *session2.WapiSession) *SessionConnectionDTO {
+// Creates DTO.
+func NewDTO(wac *whatsapp.Conn, session *session2.WapiSession) *SessionConnectionDTO {
 	quitCh := make(chan string)
 	return &SessionConnectionDTO{wac: wac, session: session, pingQuit: &quitCh}
 }

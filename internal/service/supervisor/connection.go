@@ -11,7 +11,7 @@ import (
 type ConnectionSupervisor interface {
 	AddAuthenticatedConnectionForSession(sessionID string, sessConnDTO *SessionConnectionDTO) error
 	RemoveConnectionForSession(sessionID string)
-	GetAuthenticatedConnectionForSession(sessionID string) (*SessionConnectionDTO, error)
+	AuthenticatedConnectionForSession(sessionID string) (*SessionConnectionDTO, error)
 }
 
 type ConnectionsSupervisor struct {
@@ -19,15 +19,17 @@ type ConnectionsSupervisor struct {
 	pingDevicesDuration   time.Duration
 }
 
-func NewConnectionsSupervisor(pingDevicesDuration time.Duration) *ConnectionsSupervisor {
+// Creates connection supervisor.
+func New(pingDevicesDuration time.Duration) *ConnectionsSupervisor {
 	return &ConnectionsSupervisor{
 		connectionSessionPool: make(map[string]*SessionConnectionDTO),
 		pingDevicesDuration:   pingDevicesDuration,
 	}
 }
 
+// Binds session and connection together.
 func (supervisor *ConnectionsSupervisor) AddAuthenticatedConnectionForSession(sessionID string, sessConnDTO *SessionConnectionDTO) error {
-	pong, err := sessConnDTO.GetWac().AdminTest()
+	pong, err := sessConnDTO.Wac().AdminTest()
 	if !pong || err != nil {
 		return fmt.Errorf("connection for session `%s`, not active, couldn't be added: %v", sessionID, err)
 	}
@@ -37,17 +39,19 @@ func (supervisor *ConnectionsSupervisor) AddAuthenticatedConnectionForSession(se
 	return nil
 }
 
+// Unbinds session and connection.
 func (supervisor *ConnectionsSupervisor) RemoveConnectionForSession(sessionID string) {
 	if target, ok := supervisor.connectionSessionPool[sessionID]; ok {
-		_, _ = target.GetWac().Disconnect()
+		_, _ = target.Wac().Disconnect()
 		*target.pingQuit <- ""
 		delete(supervisor.connectionSessionPool, sessionID)
 	}
 }
 
-func (supervisor *ConnectionsSupervisor) GetAuthenticatedConnectionForSession(sessionID string) (*SessionConnectionDTO, error) {
+// Gets connection of specific session.
+func (supervisor *ConnectionsSupervisor) AuthenticatedConnectionForSession(sessionID string) (*SessionConnectionDTO, error) {
 	if target, ok := supervisor.connectionSessionPool[sessionID]; ok {
-		pong, err := target.GetWac().AdminTest()
+		pong, err := target.Wac().AdminTest()
 		if !pong || err != nil {
 			return nil, fmt.Errorf("connection for session `%s` existed, but device doesn't response at the moment: %v", sessionID, err)
 		}
@@ -65,14 +69,14 @@ func (supervisor *ConnectionsSupervisor) pingConnection(sessConn *SessionConnect
 		for {
 			select {
 			case <-ticker.C:
-				pong, err := sessConn.GetWac().AdminTest()
+				pong, err := sessConn.Wac().AdminTest()
 				if !pong || err != nil {
 					currentAttemptResult = false
 					if notificationLimit > currentFailedAttempt {
 						msg := fmt.Sprintf(
 							"device of session `%s` login `%s` is not responding: %v",
-							sessConn.GetSession().SessionID,
-							sessConn.GetWac().Info.Wid,
+							sessConn.Session().SessionID,
+							sessConn.Wac().Info.Wid,
 							err,
 						)
 						sentry.CaptureMessage(msg)
@@ -86,8 +90,8 @@ func (supervisor *ConnectionsSupervisor) pingConnection(sessConn *SessionConnect
 				if !previousAttemptResult && currentAttemptResult {
 					msg := fmt.Sprintf(
 						"device of session `%s` login `%s` is responding again",
-						sessConn.GetSession().SessionID,
-						sessConn.GetWac().Info.Wid,
+						sessConn.Session().SessionID,
+						sessConn.Wac().Info.Wid,
 					)
 					sentry.CaptureMessage(msg)
 					log.Printf("warning: %s", msg)
@@ -96,7 +100,7 @@ func (supervisor *ConnectionsSupervisor) pingConnection(sessConn *SessionConnect
 
 				previousAttemptResult = currentAttemptResult
 			case <-*sessConn.pingQuit:
-				log.Printf("ping connection for session `%s` disabled", sessConn.GetSession().SessionID)
+				log.Printf("ping connection for session `%s` disabled", sessConn.Session().SessionID)
 				ticker.Stop()
 				return
 			}

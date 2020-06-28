@@ -30,6 +30,7 @@ type Handler struct {
 	WebhookURL            string
 }
 
+// Creates errors and messages handler.
 func NewHandler(
 	connection *whatsapp.Conn,
 	wapiSession *session.WapiSession,
@@ -50,6 +51,7 @@ func NewHandler(
 	}
 }
 
+// Handles connection errors.
 func (h *Handler) HandleError(err error) {
 	reconnect := func(interval time.Duration) {
 		var pong bool
@@ -103,6 +105,7 @@ func (h *Handler) HandleError(err error) {
 	log.Printf("warning: %v\n", err)
 }
 
+// Sends message to webhook and stores it in repository.
 func (h *Handler) HandleTextMessage(msg *whatsapp.TextMessage) {
 	if h.InitTimestamp == 0 {
 		h.InitTimestamp = uint64(time.Now().Unix())
@@ -164,6 +167,7 @@ func (h *Handler) messageAlreadySent(messageID string) bool {
 	return err == nil
 }
 
+// Builds webhook URL accordingly session id.
 func (h *Handler) SessionWebhookURL() string {
 	return h.WebhookURL + h.Session.SessionID
 }

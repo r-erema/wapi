@@ -36,6 +36,7 @@ type Config struct {
 	ConnectionTimeout int64
 }
 
+// Creates common config contains all application parameters.
 func New() (*Config, error) {
 	env := os.Getenv(Env)
 	if env == "" {

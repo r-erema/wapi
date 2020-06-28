@@ -17,6 +17,7 @@ type RegisterSessionHandler struct {
 	sessionWorks session2.Repository
 }
 
+// Creates RegisterSessionHandler.
 func NewRegisterSessionHandler(
 	authorizer auth.Authorizer,
 	l listener.Listener,
@@ -70,7 +71,7 @@ func (handler *RegisterSessionHandler) startListenIncomingMessages(sessionID str
 }
 
 func (handler *RegisterSessionHandler) TryToAutoConnectAllSessions() error {
-	sessionIds, err := handler.sessionWorks.GetAllSavedSessionIds()
+	sessionIds, err := handler.sessionWorks.AllSavedSessionIds()
 	if err != nil {
 		return err
 	}

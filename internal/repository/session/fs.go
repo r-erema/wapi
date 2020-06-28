@@ -17,7 +17,8 @@ type FileSystemSession struct {
 	sessionStoragePath string
 }
 
-func NewFileSystemSession(sessionStoragePath string) (*FileSystemSession, error) {
+// Creates File System Repository.
+func NewFileSystem(sessionStoragePath string) (*FileSystemSession, error) {
 	if _, err := os.Stat(sessionStoragePath); os.IsNotExist(err) {
 		err := os.MkdirAll(sessionStoragePath, os.ModePerm)
 		if err != nil {
@@ -27,6 +28,7 @@ func NewFileSystemSession(sessionStoragePath string) (*FileSystemSession, error)
 	return &FileSystemSession{sessionStoragePath: sessionStoragePath}, nil
 }
 
+// Retrieves session from repository.
 func (f FileSystemSession) ReadSession(sessionID string) (*session.WapiSession, error) {
 	ws := &session.WapiSession{}
 	file, err := os.Open(f.resolveSessionFilePath(sessionID))
@@ -47,6 +49,7 @@ func (f FileSystemSession) ReadSession(sessionID string) (*session.WapiSession, 
 	return ws, nil
 }
 
+// Retrieves session from repository.
 func (f FileSystemSession) WriteSession(s *session.WapiSession) error {
 	file, err := os.Create(f.resolveSessionFilePath(s.SessionID))
 	if err != nil {
@@ -66,7 +69,8 @@ func (f FileSystemSession) WriteSession(s *session.WapiSession) error {
 	return nil
 }
 
-func (f FileSystemSession) GetAllSavedSessionIds() ([]string, error) {
+// Retrieves all sessions ids from repository.
+func (f FileSystemSession) AllSavedSessionIds() ([]string, error) {
 	var ids []string
 	files, err := ioutil.ReadDir(f.sessionStoragePath)
 	if err != nil {
@@ -82,6 +86,7 @@ func (f FileSystemSession) GetAllSavedSessionIds() ([]string, error) {
 	return ids, nil
 }
 
+// Removes session from repository.
 func (f FileSystemSession) RemoveSession(sessionID string) error {
 	if err := os.Remove(f.resolveSessionFilePath(sessionID)); err != nil {
 		return err

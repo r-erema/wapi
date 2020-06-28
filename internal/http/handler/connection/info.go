@@ -11,18 +11,19 @@ import (
 	"github.com/r-erema/wapi/internal/service/supervisor"
 )
 
-type GetActiveConnectionInfoHandler struct {
+type ActiveConnectionInfoHandler struct {
 	connectionSupervisor supervisor.ConnectionSupervisor
 }
 
-func NewGetActiveConnectionInfoHandler(connectionSupervisor supervisor.ConnectionSupervisor) *GetActiveConnectionInfoHandler {
-	return &GetActiveConnectionInfoHandler{connectionSupervisor: connectionSupervisor}
+// Creates ActiveConnectionInfoHandler.
+func New(connectionSupervisor supervisor.ConnectionSupervisor) *ActiveConnectionInfoHandler {
+	return &ActiveConnectionInfoHandler{connectionSupervisor: connectionSupervisor}
 }
 
-func (handler *GetActiveConnectionInfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (handler *ActiveConnectionInfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	sessionID := params["sessionID"]
-	result, err := handler.connectionSupervisor.GetAuthenticatedConnectionForSession(sessionID)
+	result, err := handler.connectionSupervisor.AuthenticatedConnectionForSession(sessionID)
 	if err != nil {
 		errPrefix := "can't find active connection"
 		http.Error(w, errPrefix, http.StatusNotFound)
@@ -30,7 +31,7 @@ func (handler *GetActiveConnectionInfoHandler) ServeHTTP(w http.ResponseWriter, 
 		return
 	}
 
-	err = json.NewEncoder(w).Encode(&Resp{ConnectionInfo: result.GetWac().Info, SessionInfo: result.GetSession()})
+	err = json.NewEncoder(w).Encode(&Resp{ConnectionInfo: result.Wac().Info, SessionInfo: result.Session()})
 	if err != nil {
 		errPrefix := "can't encode result"
 		http.Error(w, errPrefix, http.StatusInternalServerError)

@@ -16,7 +16,8 @@ type SendTextMessageHandler struct {
 	connectionsSupervisor supervisor.ConnectionSupervisor
 }
 
-func NewSendMessageHandler(authorizer auth.Authorizer, connectionsSupervisor supervisor.ConnectionSupervisor) *SendTextMessageHandler {
+// Creates SendTextMessageHandler.
+func NewTextHandler(authorizer auth.Authorizer, connectionsSupervisor supervisor.ConnectionSupervisor) *SendTextMessageHandler {
 	return &SendTextMessageHandler{auth: authorizer, connectionsSupervisor: connectionsSupervisor}
 }
 
@@ -31,14 +32,14 @@ func (handler *SendTextMessageHandler) ServeHTTP(w http.ResponseWriter, r *http.
 		return
 	}
 
-	sessConnDTO, err := handler.connectionsSupervisor.GetAuthenticatedConnectionForSession(msgReq.SessionID)
+	sessConnDTO, err := handler.connectionsSupervisor.AuthenticatedConnectionForSession(msgReq.SessionID)
 	if err != nil {
 		errorPrefix := "session not registered"
 		http.Error(w, errorPrefix, http.StatusBadRequest)
 		log.Printf("%s: %v\n", errorPrefix, err)
 		return
 	}
-	wac := sessConnDTO.GetWac()
+	wac := sessConnDTO.Wac()
 
 	message := whatsapp.TextMessage{
 		Info: whatsapp.MessageInfo{

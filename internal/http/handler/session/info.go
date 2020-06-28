@@ -10,15 +10,16 @@ import (
 	sessionRepo "github.com/r-erema/wapi/internal/repository/session"
 )
 
-type GetSessionInfoHandler struct {
+type SessInfoHandler struct {
 	sessionWork sessionRepo.Repository
 }
 
-func NewGetSessionInfoHandler(sessionWork sessionRepo.Repository) *GetSessionInfoHandler {
-	return &GetSessionInfoHandler{sessionWork: sessionWork}
+// Creates SessInfoHandler.
+func NewSessInfoHandler(sessionWork sessionRepo.Repository) *SessInfoHandler {
+	return &SessInfoHandler{sessionWork: sessionWork}
 }
 
-func (handler *GetSessionInfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (handler *SessInfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	sessionID := params["sessionID"]
 	session, err := handler.sessionWork.ReadSession(sessionID)
