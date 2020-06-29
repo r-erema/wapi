@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	ListenHTTPHostEnvVarKey     = "WAPI_INTERNAL_HOST"
+	ListenHTTPHost              = "WAPI_INTERNAL_HOST"
 	WhatsAppConnectionTimeout   = "WAPI_WHATSAPP_CONNECTION_TIMEOUT"
 	FileSystemRootPoint         = "WAPI_FILE_SYSTEM_ROOT_POINT_FULL_PATH"
 	WebHookURL                  = "WAPI_GETTING_MESSAGES_WEBHOOK"
@@ -20,6 +20,9 @@ const (
 
 	DevMode  = "dev"
 	ProdMode = "prod"
+
+	DefaultConnectionsCheckoutDuration = 60
+	DefaultConnectionTimeout           = 20
 )
 
 // Config stores all application parameters.
@@ -34,7 +37,7 @@ type Config struct {
 	SentryDSN,
 	CertKeyPath string
 	ConnectionsCheckoutDuration,
-	ConnectionTimeout int64
+	ConnectionTimeout int
 }
 
 // Creates common config contains all application parameters.
@@ -47,19 +50,19 @@ func New() (*Config, error) {
 		return nil, fmt.Errorf("`%s` param allowed values: `%s`, `%s`", Env, DevMode, ProdMode)
 	}
 
-	listenHost := os.Getenv(ListenHTTPHostEnvVarKey)
+	listenHost := os.Getenv(ListenHTTPHost)
 	if listenHost == "" {
-		return nil, fmt.Errorf("required evironment variable `%s` isn't set", ListenHTTPHostEnvVarKey)
+		return nil, fmt.Errorf("required evironment variable `%s` isn't set", ListenHTTPHost)
 	}
 
 	checkoutDuration, err := strconv.ParseInt(os.Getenv(ConnectionsCheckoutDuration), 10, 64)
 	if err != nil {
-		checkoutDuration = 600
+		checkoutDuration = DefaultConnectionsCheckoutDuration
 	}
 
 	connectionTimeout, err := strconv.ParseInt(os.Getenv(WhatsAppConnectionTimeout), 10, 64)
 	if err != nil {
-		connectionTimeout = 20
+		connectionTimeout = DefaultConnectionTimeout
 	}
 
 	filesRootPath := os.Getenv(FileSystemRootPoint)
@@ -82,7 +85,7 @@ func New() (*Config, error) {
 
 	return &Config{
 		ListenHTTPHost:              listenHost,
-		ConnectionTimeout:           connectionTimeout,
+		ConnectionTimeout:           int(connectionTimeout),
 		FileSystemRootPath:          filesRootPath,
 		WebHookURL:                  webHookURL,
 		RedisHost:                   redisHost,
@@ -90,6 +93,6 @@ func New() (*Config, error) {
 		CertFilePath:                os.Getenv(CertFilePath),
 		CertKeyPath:                 os.Getenv(CertKeyPath),
 		SentryDSN:                   os.Getenv(SentryDSN),
-		ConnectionsCheckoutDuration: checkoutDuration,
+		ConnectionsCheckoutDuration: int(checkoutDuration),
 	}, nil
 }
