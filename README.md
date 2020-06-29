@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/r-erema/wapi.svg?branch=master)](https://travis-ci.com/r-erema/wapi)
+
 # wapi #
 
 ## What is it? ##
