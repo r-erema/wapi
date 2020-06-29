@@ -13,17 +13,17 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Returns QR image.
-type GetQRImageHandler struct {
+// ImageHandler returns QR image.
+type ImageHandler struct {
 	qrFileResolver file.QRFileResolver
 }
 
-// Creates GetQRImageHandler.
-func New(qrFileResolver file.QRFileResolver) *GetQRImageHandler {
-	return &GetQRImageHandler{qrFileResolver: qrFileResolver}
+// New creates ImageHandler.
+func New(qrFileResolver file.QRFileResolver) *ImageHandler {
+	return &ImageHandler{qrFileResolver: qrFileResolver}
 }
 
-func (handler *GetQRImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (handler *ImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	sessionID := params["sessionID"]
 	qrImagePath := handler.qrFileResolver.ResolveQrFilePath(sessionID)

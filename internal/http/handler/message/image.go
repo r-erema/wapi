@@ -12,13 +12,13 @@ import (
 	"github.com/r-erema/wapi/internal/service/supervisor"
 )
 
-// Responsible for sending images.
+// SendImageHandler responsible for sending images.
 type SendImageHandler struct {
 	auth                  auth.Authorizer
 	connectionsSupervisor supervisor.Connections
 }
 
-// Creates SendImageHandler.
+// NewImageHandler creates SendImageHandler.
 func NewImageHandler(authorizer auth.Authorizer, connectionsSupervisor supervisor.Connections) *SendImageHandler {
 	return &SendImageHandler{auth: authorizer, connectionsSupervisor: connectionsSupervisor}
 }
@@ -28,7 +28,7 @@ func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	var msgReq SendImageRequest
 	err := decoder.Decode(&msgReq)
 	if err != nil {
-		const errorPrefix = "can't decode request"
+		var errorPrefix = "can't decode request"
 		http.Error(w, errorPrefix, http.StatusBadRequest)
 		log.Printf("%s: %v\n", errorPrefix, err)
 		return
@@ -36,7 +36,7 @@ func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 
 	sessConnDTO, err := handler.connectionsSupervisor.AuthenticatedConnectionForSession(msgReq.SessionID)
 	if err != nil {
-		const errorPrefix = "session not registered"
+		var errorPrefix = "session not registered"
 		http.Error(w, errorPrefix, http.StatusBadRequest)
 		log.Printf("%s: %v\n", errorPrefix, err)
 		return
@@ -76,7 +76,7 @@ func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 
 	_, err = wac.Send(message)
 	if err != nil {
-		const errorPrefix = "sending message error"
+		var errorPrefix = "sending message error"
 		http.Error(w, errorPrefix, http.StatusInternalServerError)
 		log.Printf("%s: %v\n", errorPrefix, err)
 	}
@@ -88,13 +88,14 @@ func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(responseBody)
 	if err != nil {
-		const errorPrefix = "can't write body to response"
+		var errorPrefix = "can't write body to response"
 		http.Error(w, errorPrefix, http.StatusInternalServerError)
 		log.Printf("%s: %v\n", errorPrefix, err)
 		return
 	}
 }
 
+// SendImageRequest is the request for sending image to WhatsApp.
 type SendImageRequest struct {
 	SessionID string `json:"session_name"`
 	ChatID    string `json:"chat_id"`

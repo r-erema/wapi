@@ -18,13 +18,13 @@ type Connections interface {
 	AuthenticatedConnectionForSession(sessionID string) (*SessionConnectionDTO, error)
 }
 
-// Stores and checks connections state.
+// ConnectionsPool stores and checks connections state.
 type ConnectionsPool struct {
 	connectionSessionPool map[string]*SessionConnectionDTO
 	pingDevicesDuration   time.Duration
 }
 
-// Creates connection supervisor.
+// New creates connection supervisor.
 func New(pingDevicesDuration time.Duration) *ConnectionsPool {
 	return &ConnectionsPool{
 		connectionSessionPool: make(map[string]*SessionConnectionDTO),
@@ -32,6 +32,7 @@ func New(pingDevicesDuration time.Duration) *ConnectionsPool {
 	}
 }
 
+// Binds session and connection together.
 func (supervisor *ConnectionsPool) AddAuthenticatedConnectionForSession(sessionID string, sessConnDTO *SessionConnectionDTO) error {
 	pong, err := sessConnDTO.Wac().AdminTest()
 	if !pong || err != nil {
@@ -43,6 +44,7 @@ func (supervisor *ConnectionsPool) AddAuthenticatedConnectionForSession(sessionI
 	return nil
 }
 
+// Unbinds session and connection.
 func (supervisor *ConnectionsPool) RemoveConnectionForSession(sessionID string) {
 	if target, ok := supervisor.connectionSessionPool[sessionID]; ok {
 		_, _ = target.Wac().Disconnect()
@@ -51,6 +53,7 @@ func (supervisor *ConnectionsPool) RemoveConnectionForSession(sessionID string) 
 	}
 }
 
+// Gets connection of specific session.
 func (supervisor *ConnectionsPool) AuthenticatedConnectionForSession(sessionID string) (*SessionConnectionDTO, error) {
 	if target, ok := supervisor.connectionSessionPool[sessionID]; ok {
 		pong, err := target.Wac().AdminTest()

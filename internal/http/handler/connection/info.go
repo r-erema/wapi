@@ -11,12 +11,12 @@ import (
 	"github.com/r-erema/wapi/internal/service/supervisor"
 )
 
-// Provides info about connection by session ID.
+// ActiveConnectionInfoHandler provides info about connection by session ID.
 type ActiveConnectionInfoHandler struct {
 	connectionSupervisor supervisor.Connections
 }
 
-// Creates ActiveConnectionInfoHandler.
+// New creates ActiveConnectionInfoHandler.
 func New(connectionSupervisor supervisor.Connections) *ActiveConnectionInfoHandler {
 	return &ActiveConnectionInfoHandler{connectionSupervisor: connectionSupervisor}
 }

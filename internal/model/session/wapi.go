@@ -2,7 +2,7 @@ package session
 
 import "github.com/Rhymen/go-whatsapp"
 
-// Model of wapi session.
+// WapiSession is a model of wapi session.
 type WapiSession struct {
 	SessionID       string
 	WhatsAppSession *whatsapp.Session

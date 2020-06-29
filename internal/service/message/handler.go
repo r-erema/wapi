@@ -18,9 +18,10 @@ import (
 	"github.com/getsentry/sentry-go"
 )
 
+// Sentry flush timout
 const SentryFlushTimeoutSeconds = 5
 
-// Handle incoming messages and errors.
+// Handler responsible handle incoming messages and errors.
 type Handler struct {
 	Connection            *whatsapp.Conn
 	Session               *session.WapiSession
@@ -31,7 +32,7 @@ type Handler struct {
 	WebhookURL            string
 }
 
-// Creates errors and messages handler.
+// NewHandler creates errors and messages handler.
 func NewHandler(
 	connection *whatsapp.Conn,
 	wapiSession *session.WapiSession,
@@ -52,7 +53,7 @@ func NewHandler(
 	}
 }
 
-// Handles connection errors.
+// HandleError handles connection errors.
 func (h *Handler) HandleError(err error) {
 	reconnect := func(interval time.Duration) {
 		var pong bool
@@ -106,7 +107,7 @@ func (h *Handler) HandleError(err error) {
 	log.Printf("warning: %v\n", err)
 }
 
-// Sends message to webhook and stores it in repository.
+// HandleTextMessage sends message to webhook and stores it in repository.
 func (h *Handler) HandleTextMessage(msg *whatsapp.TextMessage) {
 	if h.InitTimestamp == 0 {
 		h.InitTimestamp = uint64(time.Now().Unix())
@@ -164,7 +165,7 @@ func (h *Handler) isMessageAllowedToHandle(msg *whatsapp.TextMessage) bool {
 }
 
 func (h *Handler) messageAlreadySent(messageID string) bool {
-	_, err := h.messageRepo.GetMessageTime("wapi_sent_message:" + messageID)
+	_, err := h.messageRepo.MessageTime("wapi_sent_message:" + messageID)
 	return err == nil
 }
 

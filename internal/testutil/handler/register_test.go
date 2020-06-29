@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"sync"
 	"testing"
 
@@ -14,22 +13,21 @@ import (
 	mockSession "github.com/r-erema/wapi/internal/testutil/mock/session"
 
 	"github.com/Rhymen/go-whatsapp"
+	"github.com/gavv/httpexpect/v2"
 	"github.com/golang/mock/gomock"
 )
 
 func TestRegisterSessionSuccess(t *testing.T) {
 	handler := session.NewRegisterSessionHandler(prepareMocks(t))
-	r := httptest.NewRequest(
-		"POST",
-		"/register-session/",
-		strings.NewReader(`{"session_id":"session_id_token_81E25FCF8393C916D131A81C60AFFEB11"}`),
-	)
-	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, r)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("Wrong status %v, expected %v", w.Code, http.StatusOK)
-	}
+	server := httptest.NewServer(handler)
+	defer server.Close()
+
+	e := httpexpect.New(t, server.URL)
+	e.POST("/register-session/").
+		WithJSON(map[string]string{"session_id": "session_id_token_81E25FCF8393C916D131A81C60AFFEB11"}).
+		Expect().
+		Status(http.StatusOK)
 }
 
 func prepareMocks(t *testing.T) (

@@ -7,18 +7,30 @@ import (
 )
 
 const (
-	ListenHTTPHostEnvVarKey     = "WAPI_INTERNAL_HOST"
-	WhatsAppConnectionTimeout   = "WAPI_WHATSAPP_CONNECTION_TIMEOUT"
-	FileSystemRootPoint         = "WAPI_FILE_SYSTEM_ROOT_POINT_FULL_PATH"
-	WebHookURL                  = "WAPI_GETTING_MESSAGES_WEBHOOK"
-	RedisHost                   = "WAPI_REDIS_HOST"
-	Env                         = "WAPI_ENV"
-	CertFilePath                = "WAPI_CERT_FILE_PATH"
-	CertKeyPath                 = "WAPI_CERT_KEY_PATH"
-	SentryDSN                   = "WAPI_SENTRY_DSN"
+	// Service HTTP host.
+	ListenHTTPHost = "WAPI_INTERNAL_HOST"
+	// Timeout of connection with WhatsApp service.
+	WhatsAppConnectionTimeout = "WAPI_WHATSAPP_CONNECTION_TIMEOUT"
+	// Directory of storing static files.
+	FileSystemRootPoint = "WAPI_FILE_SYSTEM_ROOT_POINT_FULL_PATH"
+	// Webhook url.
+	WebHookURL = "WAPI_GETTING_MESSAGES_WEBHOOK"
+	// Redis host.
+	RedisHost = "WAPI_REDIS_HOST"
+	// Wapi environment: dev or prod.
+	Env = "WAPI_ENV"
+	// Path to certificate file.
+	CertFilePath = "WAPI_CERT_FILE_PATH"
+	// Path to certificate key file.
+	CertKeyPath = "WAPI_CERT_KEY_PATH"
+	// Sentry connection string.
+	SentryDSN = "WAPI_SENTRY_DSN"
+	// Connections checkout durations in seconds.
 	ConnectionsCheckoutDuration = "WAPI_CONNECTIONS_CHECKOUT_DURATION_SECS"
 
-	DevMode  = "dev"
+	// Development mode value of wapi environment.
+	DevMode = "dev"
+	// Production mode value of wapi environment.
 	ProdMode = "prod"
 )
 
@@ -37,7 +49,7 @@ type Config struct {
 	ConnectionTimeout int64
 }
 
-// Creates common config contains all application parameters.
+// New creates common config contains all application parameters.
 func New() (*Config, error) {
 	env := os.Getenv(Env)
 	if env == "" {
@@ -47,9 +59,9 @@ func New() (*Config, error) {
 		return nil, fmt.Errorf("`%s` param allowed values: `%s`, `%s`", Env, DevMode, ProdMode)
 	}
 
-	listenHost := os.Getenv(ListenHTTPHostEnvVarKey)
+	listenHost := os.Getenv(ListenHTTPHost)
 	if listenHost == "" {
-		return nil, fmt.Errorf("required evironment variable `%s` isn't set", ListenHTTPHostEnvVarKey)
+		return nil, fmt.Errorf("required evironment variable `%s` isn't set", ListenHTTPHost)
 	}
 
 	checkoutDuration, err := strconv.ParseInt(os.Getenv(ConnectionsCheckoutDuration), 10, 64)
