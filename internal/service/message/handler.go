@@ -1,4 +1,4 @@
-package listener
+package message
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 
 	"github.com/r-erema/wapi/internal/model/session"
 	"github.com/r-erema/wapi/internal/repository/message"
-	session2 "github.com/r-erema/wapi/internal/repository/session"
+	storedSession "github.com/r-erema/wapi/internal/repository/session"
 	"github.com/r-erema/wapi/internal/service/supervisor"
 
 	"github.com/Rhymen/go-whatsapp"
@@ -24,8 +24,8 @@ type Handler struct {
 	Connection            *whatsapp.Conn
 	Session               *session.WapiSession
 	messageRepo           message.Repository
-	connectionsSupervisor supervisor.ConnectionSupervisor
-	sessionWorks          session2.Repository
+	connectionsSupervisor supervisor.Connections
+	storedSession         storedSession.Repository
 	InitTimestamp         uint64
 	WebhookURL            string
 }
@@ -35,8 +35,8 @@ func NewHandler(
 	connection *whatsapp.Conn,
 	wapiSession *session.WapiSession,
 	messageRepo message.Repository,
-	connectionsSupervisor supervisor.ConnectionSupervisor,
-	sessionWorks session2.Repository,
+	connectionsSupervisor supervisor.Connections,
+	sessionWorks storedSession.Repository,
 	initTimestamp uint64,
 	webhookURL string,
 ) *Handler {
@@ -47,7 +47,7 @@ func NewHandler(
 		InitTimestamp:         initTimestamp,
 		WebhookURL:            webhookURL,
 		connectionsSupervisor: connectionsSupervisor,
-		sessionWorks:          sessionWorks,
+		storedSession:         sessionWorks,
 	}
 }
 
@@ -58,7 +58,7 @@ func (h *Handler) HandleError(err error) {
 		pong, err = h.Connection.AdminTest()
 		if !pong || (err != nil && err == whatsapp.ErrNotConnected) {
 			h.connectionsSupervisor.RemoveConnectionForSession(h.Session.SessionID)
-			_ = h.sessionWorks.RemoveSession(h.Session.SessionID)
+			_ = h.storedSession.RemoveSession(h.Session.SessionID)
 			log.Printf("device isn't responding, session will be removed, reconnection canceled: %v", err)
 			sentry.CaptureException(fmt.Errorf(
 				"device lost connection, need to connect manually (by QR-code) `%s`, login: `%s`: %v",

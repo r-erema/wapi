@@ -13,11 +13,11 @@ import (
 
 type SendTextMessageHandler struct {
 	auth                  auth.Authorizer
-	connectionsSupervisor supervisor.ConnectionSupervisor
+	connectionsSupervisor supervisor.Connections
 }
 
 // Creates SendTextMessageHandler.
-func NewTextHandler(authorizer auth.Authorizer, connectionsSupervisor supervisor.ConnectionSupervisor) *SendTextMessageHandler {
+func NewTextHandler(authorizer auth.Authorizer, connectionsSupervisor supervisor.Connections) *SendTextMessageHandler {
 	return &SendTextMessageHandler{auth: authorizer, connectionsSupervisor: connectionsSupervisor}
 }
 

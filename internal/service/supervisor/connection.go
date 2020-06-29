@@ -8,27 +8,29 @@ import (
 	"github.com/getsentry/sentry-go"
 )
 
-type ConnectionSupervisor interface {
+type Connections interface {
+	// Binds session and connection together.
 	AddAuthenticatedConnectionForSession(sessionID string, sessConnDTO *SessionConnectionDTO) error
+	// Unbinds session and connection.
 	RemoveConnectionForSession(sessionID string)
+	// Gets connection of specific session.
 	AuthenticatedConnectionForSession(sessionID string) (*SessionConnectionDTO, error)
 }
 
-type ConnectionsSupervisor struct {
+type ConnectionsPool struct {
 	connectionSessionPool map[string]*SessionConnectionDTO
 	pingDevicesDuration   time.Duration
 }
 
 // Creates connection supervisor.
-func New(pingDevicesDuration time.Duration) *ConnectionsSupervisor {
-	return &ConnectionsSupervisor{
+func New(pingDevicesDuration time.Duration) *ConnectionsPool {
+	return &ConnectionsPool{
 		connectionSessionPool: make(map[string]*SessionConnectionDTO),
 		pingDevicesDuration:   pingDevicesDuration,
 	}
 }
 
-// Binds session and connection together.
-func (supervisor *ConnectionsSupervisor) AddAuthenticatedConnectionForSession(sessionID string, sessConnDTO *SessionConnectionDTO) error {
+func (supervisor *ConnectionsPool) AddAuthenticatedConnectionForSession(sessionID string, sessConnDTO *SessionConnectionDTO) error {
 	pong, err := sessConnDTO.Wac().AdminTest()
 	if !pong || err != nil {
 		return fmt.Errorf("connection for session `%s`, not active, couldn't be added: %v", sessionID, err)
@@ -39,8 +41,7 @@ func (supervisor *ConnectionsSupervisor) AddAuthenticatedConnectionForSession(se
 	return nil
 }
 
-// Unbinds session and connection.
-func (supervisor *ConnectionsSupervisor) RemoveConnectionForSession(sessionID string) {
+func (supervisor *ConnectionsPool) RemoveConnectionForSession(sessionID string) {
 	if target, ok := supervisor.connectionSessionPool[sessionID]; ok {
 		_, _ = target.Wac().Disconnect()
 		*target.pingQuit <- ""
@@ -48,8 +49,7 @@ func (supervisor *ConnectionsSupervisor) RemoveConnectionForSession(sessionID st
 	}
 }
 
-// Gets connection of specific session.
-func (supervisor *ConnectionsSupervisor) AuthenticatedConnectionForSession(sessionID string) (*SessionConnectionDTO, error) {
+func (supervisor *ConnectionsPool) AuthenticatedConnectionForSession(sessionID string) (*SessionConnectionDTO, error) {
 	if target, ok := supervisor.connectionSessionPool[sessionID]; ok {
 		pong, err := target.Wac().AdminTest()
 		if !pong || err != nil {
@@ -60,7 +60,7 @@ func (supervisor *ConnectionsSupervisor) AuthenticatedConnectionForSession(sessi
 	return nil, fmt.Errorf("connection for session `%s` not found", sessionID)
 }
 
-func (supervisor *ConnectionsSupervisor) pingConnection(sessConn *SessionConnectionDTO) {
+func (supervisor *ConnectionsPool) pingConnection(sessConn *SessionConnectionDTO) {
 	ticker := time.NewTicker(supervisor.pingDevicesDuration * time.Second)
 	notificationLimit := 3
 	currentFailedAttempt := 0

@@ -12,6 +12,7 @@ build:
 run:
 	docker run --env-file .env erema/wapi:0.1
 
+# https://github.com/golang/mock
 gen-mock:
 	mockgen  -source=internal/service/auth/auth.go -destination=internal/testutil/mock/auth/auth.go
 	mockgen  -source=internal/service/listener/listener.go -destination=internal/testutil/mock/listener/listener.go

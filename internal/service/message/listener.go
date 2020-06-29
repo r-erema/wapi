@@ -1,4 +1,4 @@
-package listener
+package message
 
 import (
 	"log"
@@ -15,12 +15,13 @@ import (
 )
 
 type Listener interface {
+	// Receives messages from WhatsApp server and propagates them to handlers.
 	ListenForSession(sessionID string, wg *sync.WaitGroup) (gracefulDone bool, err error)
 }
 
 type WebHook struct {
 	sessionWorks          sessionRepo.Repository
-	connectionsSupervisor supervisor.ConnectionSupervisor
+	connectionsSupervisor supervisor.Connections
 	auth                  auth.Authorizer
 	webhookURL            string
 	msgRepo               message.Repository
@@ -29,7 +30,7 @@ type WebHook struct {
 // Creates listener for sending messages to webhook.
 func NewWebHook(
 	sessionWorks sessionRepo.Repository,
-	connectionsSupervisor supervisor.ConnectionSupervisor,
+	connectionsSupervisor supervisor.Connections,
 	authorizer auth.Authorizer,
 	webhookURL string,
 	msgRepo message.Repository,
@@ -43,7 +44,6 @@ func NewWebHook(
 	}
 }
 
-// Receives messages from WhatsApp server and propagates them to handlers.
 func (l *WebHook) ListenForSession(sessionID string, wg *sync.WaitGroup) (gracefulDone bool, err error) {
 	_, err = l.connectionsSupervisor.AuthenticatedConnectionForSession(sessionID)
 	if err == nil {
@@ -51,18 +51,18 @@ func (l *WebHook) ListenForSession(sessionID string, wg *sync.WaitGroup) (gracef
 		return false, err
 	}
 
-	wac, session2, err := l.auth.Login(sessionID)
-	if err != nil || wac == nil || session2 == nil {
+	wac, session, err := l.auth.Login(sessionID)
+	if err != nil || wac == nil || session == nil {
 		log.Printf("login failed in message ListenerWebHook: %v\n", err)
 		wg.Done()
 		return false, err
 	}
 
-	log.Printf("start listening messages for sessionRepo `%s`, bound login: `%s`", session2.SessionID, session2.WhatsAppSession.Wid)
+	log.Printf("start listening messages for sessionRepo `%s`, bound login: `%s`", session.SessionID, session.WhatsAppSession.Wid)
 
 	wac.AddHandler(NewHandler(
 		wac,
-		session2,
+		session,
 		l.msgRepo,
 		l.connectionsSupervisor,
 		l.sessionWorks,
@@ -76,12 +76,12 @@ func (l *WebHook) ListenForSession(sessionID string, wg *sync.WaitGroup) (gracef
 	<-c
 
 	waSession, err := wac.Disconnect()
-	session2.WhatsAppSession = &waSession
+	session.WhatsAppSession = &waSession
 	if err != nil {
 		log.Printf("error disconnecting: %v\n", err)
 		return false, err
 	}
-	if err := l.sessionWorks.WriteSession(session2); err != nil {
+	if err := l.sessionWorks.WriteSession(session); err != nil {
 		log.Printf("error saving sessionRepo: %v", err)
 		return false, err
 	}

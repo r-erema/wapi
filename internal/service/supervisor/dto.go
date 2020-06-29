@@ -1,19 +1,19 @@
 package supervisor
 
 import (
-	session2 "github.com/r-erema/wapi/internal/model/session"
+	"github.com/r-erema/wapi/internal/model/session"
 
 	"github.com/Rhymen/go-whatsapp"
 )
 
 type SessionConnectionDTO struct {
 	wac      *whatsapp.Conn
-	session  *session2.WapiSession
+	session  *session.WapiSession
 	pingQuit *chan string
 }
 
 // Gets session.
-func (s SessionConnectionDTO) Session() *session2.WapiSession {
+func (s SessionConnectionDTO) Session() *session.WapiSession {
 	return s.session
 }
 
@@ -23,7 +23,7 @@ func (s SessionConnectionDTO) Wac() *whatsapp.Conn {
 }
 
 // Creates DTO.
-func NewDTO(wac *whatsapp.Conn, session *session2.WapiSession) *SessionConnectionDTO {
+func NewDTO(wac *whatsapp.Conn, sess *session.WapiSession) *SessionConnectionDTO {
 	quitCh := make(chan string)
-	return &SessionConnectionDTO{wac: wac, session: session, pingQuit: &quitCh}
+	return &SessionConnectionDTO{wac: wac, session: sess, pingQuit: &quitCh}
 }

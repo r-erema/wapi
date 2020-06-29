@@ -16,6 +16,7 @@ import (
 )
 
 type Authorizer interface {
+	// Authorizes user whether by stored session file or by qr-code.
 	Login(sessionID string) (*whatsapp.Conn, *sessionModel.WapiSession, error)
 }
 
@@ -23,7 +24,7 @@ type Auth struct {
 	QrImagesFilesPath     string
 	timeoutConnection     time.Duration
 	SessionWorks          sessionRepo.Repository
-	connectionsSupervisor supervisor.ConnectionSupervisor
+	connectionsSupervisor supervisor.Connections
 }
 
 // Creates Auth service.
@@ -31,7 +32,7 @@ func New(
 	qrImagesFilesPath string,
 	timeoutConnection time.Duration,
 	sessionWorks sessionRepo.Repository,
-	connectionsSupervisor supervisor.ConnectionSupervisor,
+	connectionsSupervisor supervisor.Connections,
 ) (*Auth, error) {
 	if _, err := os.Stat(qrImagesFilesPath); os.IsNotExist(err) {
 		err := os.MkdirAll(qrImagesFilesPath, os.ModePerm)
@@ -48,7 +49,6 @@ func New(
 	}, nil
 }
 
-// Authorizes user whether by stored session file or by qr-code.
 func (auth *Auth) Login(sessionID string) (*whatsapp.Conn, *sessionModel.WapiSession, error) {
 	wac, err := whatsapp.NewConn(auth.timeoutConnection)
 	if err != nil {
@@ -104,7 +104,6 @@ func (auth *Auth) Login(sessionID string) (*whatsapp.Conn, *sessionModel.WapiSes
 	return wac, wapiSession, nil
 }
 
-// Returns path to image file of qr-code.
 func (auth *Auth) ResolveQrFilePath(sessionID string) string {
 	return auth.QrImagesFilesPath + "/qr_" + sessionID + ".png"
 }

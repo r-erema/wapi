@@ -16,7 +16,7 @@ import (
 	messageRepo "github.com/r-erema/wapi/internal/repository/message"
 	sessionRepo "github.com/r-erema/wapi/internal/repository/session"
 	"github.com/r-erema/wapi/internal/service/auth"
-	"github.com/r-erema/wapi/internal/service/listener"
+	messageHandling "github.com/r-erema/wapi/internal/service/message"
 	"github.com/r-erema/wapi/internal/service/supervisor"
 
 	_ "github.com/Rhymen/go-whatsapp"
@@ -64,7 +64,7 @@ func main() {
 		log.Fatalf("can't create service `a`: %v\n", err)
 	}
 
-	l := listener.NewWebHook(sessionWorks, connSupervisor, a, conf.WebHookURL, redisClient)
+	l := messageHandling.NewWebHook(sessionWorks, connSupervisor, a, conf.WebHookURL, redisClient)
 
 	registerHandler := session.NewRegisterSessionHandler(a, l, sessionWorks)
 	log.Print("trying to auto connect saved sessions if exist...")

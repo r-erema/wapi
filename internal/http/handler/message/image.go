@@ -14,11 +14,11 @@ import (
 
 type SendImageHandler struct {
 	auth                  auth.Authorizer
-	connectionsSupervisor supervisor.ConnectionSupervisor
+	connectionsSupervisor supervisor.Connections
 }
 
 // Creates SendImageHandler.
-func NewImageHandler(authorizer auth.Authorizer, connectionsSupervisor supervisor.ConnectionSupervisor) *SendImageHandler {
+func NewImageHandler(authorizer auth.Authorizer, connectionsSupervisor supervisor.Connections) *SendImageHandler {
 	return &SendImageHandler{auth: authorizer, connectionsSupervisor: connectionsSupervisor}
 }
 

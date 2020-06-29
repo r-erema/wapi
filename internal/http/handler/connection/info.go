@@ -12,11 +12,11 @@ import (
 )
 
 type ActiveConnectionInfoHandler struct {
-	connectionSupervisor supervisor.ConnectionSupervisor
+	connectionSupervisor supervisor.Connections
 }
 
 // Creates ActiveConnectionInfoHandler.
-func New(connectionSupervisor supervisor.ConnectionSupervisor) *ActiveConnectionInfoHandler {
+func New(connectionSupervisor supervisor.Connections) *ActiveConnectionInfoHandler {
 	return &ActiveConnectionInfoHandler{connectionSupervisor: connectionSupervisor}
 }
 
