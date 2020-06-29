@@ -7,6 +7,7 @@ import (
 	"github.com/go-redis/redis"
 )
 
+// Stores messages metadata via Redis.
 type RedisRepository struct {
 	client              *redis.Client
 	storeExpirationTime time.Duration

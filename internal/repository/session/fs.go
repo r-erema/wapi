@@ -13,6 +13,7 @@ import (
 
 const sessionFileExt = ".gob"
 
+// Stores sessions metadata in filesystem.
 type FileSystemSession struct {
 	sessionStoragePath string
 }

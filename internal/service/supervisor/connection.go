@@ -8,6 +8,7 @@ import (
 	"github.com/getsentry/sentry-go"
 )
 
+// Stores and monitors the states of connections.
 type Connections interface {
 	// Binds session and connection together.
 	AddAuthenticatedConnectionForSession(sessionID string, sessConnDTO *SessionConnectionDTO) error
@@ -17,6 +18,7 @@ type Connections interface {
 	AuthenticatedConnectionForSession(sessionID string) (*SessionConnectionDTO, error)
 }
 
+// Stores and checks connections state.
 type ConnectionsPool struct {
 	connectionSessionPool map[string]*SessionConnectionDTO
 	pingDevicesDuration   time.Duration

@@ -11,6 +11,7 @@ import (
 	"github.com/r-erema/wapi/internal/service/supervisor"
 )
 
+// Provides info about connection by session ID.
 type ActiveConnectionInfoHandler struct {
 	connectionSupervisor supervisor.Connections
 }

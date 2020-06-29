@@ -14,11 +14,13 @@ import (
 	"github.com/r-erema/wapi/internal/service/supervisor"
 )
 
+// Listens for incoming messages from WhatsApp server.
 type Listener interface {
 	// Receives messages from WhatsApp server and propagates them to handlers.
 	ListenForSession(sessionID string, wg *sync.WaitGroup) (gracefulDone bool, err error)
 }
 
+// Listens for incoming messages and propagate them to webhook handler.
 type WebHook struct {
 	sessionWorks          sessionRepo.Repository
 	connectionsSupervisor supervisor.Connections

@@ -10,6 +10,7 @@ import (
 	sessionRepo "github.com/r-erema/wapi/internal/repository/session"
 )
 
+// Provides info about session.
 type SessInfoHandler struct {
 	sessionWork sessionRepo.Repository
 }

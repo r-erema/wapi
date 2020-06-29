@@ -15,11 +15,13 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
+// Responsible for users authorization.
 type Authorizer interface {
 	// Authorizes user whether by stored session file or by qr-code.
 	Login(sessionID string) (*whatsapp.Conn, *sessionModel.WapiSession, error)
 }
 
+// Responsible for users authorization using qr-code or stored session.
 type Auth struct {
 	QrImagesFilesPath     string
 	timeoutConnection     time.Duration

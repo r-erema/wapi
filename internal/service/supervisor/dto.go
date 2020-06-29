@@ -6,6 +6,7 @@ import (
 	"github.com/Rhymen/go-whatsapp"
 )
 
+// DTO containing service data for supervising.
 type SessionConnectionDTO struct {
 	wac      *whatsapp.Conn
 	session  *session.WapiSession

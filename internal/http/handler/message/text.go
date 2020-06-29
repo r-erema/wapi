@@ -11,6 +11,7 @@ import (
 	"github.com/Rhymen/go-whatsapp"
 )
 
+// Responsible for sending text messages.
 type SendTextMessageHandler struct {
 	auth                  auth.Authorizer
 	connectionsSupervisor supervisor.Connections

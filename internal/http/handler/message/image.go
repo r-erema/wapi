@@ -12,6 +12,7 @@ import (
 	"github.com/r-erema/wapi/internal/service/supervisor"
 )
 
+// Responsible for sending images.
 type SendImageHandler struct {
 	auth                  auth.Authorizer
 	connectionsSupervisor supervisor.Connections

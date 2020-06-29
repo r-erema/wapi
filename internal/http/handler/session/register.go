@@ -11,6 +11,7 @@ import (
 	"github.com/r-erema/wapi/internal/service/message"
 )
 
+// Responsible for creation of new session.
 type RegisterSessionHandler struct {
 	auth         auth.Authorizer
 	listener     message.Listener

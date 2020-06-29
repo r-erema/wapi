@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Returns QR image.
 type GetQRImageHandler struct {
 	qrFileResolver file.QRFileResolver
 }

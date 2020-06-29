@@ -22,6 +22,7 @@ const (
 	ProdMode = "prod"
 )
 
+// Config stores all application parameters.
 type Config struct {
 	ListenHTTPHost,
 	FileSystemRootPath,

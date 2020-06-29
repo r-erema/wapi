@@ -20,6 +20,7 @@ import (
 
 const SentryFlushTimeoutSeconds = 5
 
+// Handle incoming messages and errors.
 type Handler struct {
 	Connection            *whatsapp.Conn
 	Session               *session.WapiSession
