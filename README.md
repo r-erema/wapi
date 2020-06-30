@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.com/r-erema/wapi.svg?branch=master)](https://travis-ci.com/r-erema/wapi)
 
-[![Coverage Status](https://coveralls.io/repos/github/r-erema/wapi/badge.svg?branch=master)](https://coveralls.io/github/r-erema/wapi?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/r-erema/wapi/badge.svg?branch=master&kill_cache=1)](https://coveralls.io/github/r-erema/wapi?branch=master)
 
 # wapi #
 
