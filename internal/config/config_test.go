@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var defaultEnvs = map[string]string{
@@ -85,9 +86,7 @@ func TestNotValidEnvVars(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			err := setEnvs(tt.envVars, tt.excludedEnvVars)
-			if err != nil {
-				t.Error(err)
-			}
+			require.Nil(t, err)
 
 			config, err := New()
 
@@ -99,27 +98,25 @@ func TestNotValidEnvVars(t *testing.T) {
 
 func TestDefaultEnvParam(t *testing.T) {
 	var conf *Config
+
 	err := setEnvs(map[string]string{}, []string{Env})
-	if err != nil {
-		t.Error(err)
-	}
+	require.Nil(t, err)
+
 	conf, err = New()
-	if err != nil {
-		t.Error(err)
-	}
+	require.Nil(t, err)
+
 	assert.Equal(t, ProdMode, conf.Env)
 }
 
 func TestDefaultCheckoutDurationParam(t *testing.T) {
 	var conf *Config
+
 	err := setEnvs(map[string]string{}, []string{ConnectionsCheckoutDuration})
-	if err != nil {
-		t.Error(err)
-	}
+	require.Nil(t, err)
+
 	conf, err = New()
-	if err != nil {
-		t.Error(err)
-	}
+	require.Nil(t, err)
+
 	assert.Equal(t, DefaultConnectionsCheckoutDuration, conf.ConnectionsCheckoutDuration)
 }
 

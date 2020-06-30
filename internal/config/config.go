@@ -7,34 +7,23 @@ import (
 )
 
 const (
-	// Service HTTP host.
-	ListenHTTPHost = "WAPI_INTERNAL_HOST"
-	// Timeout of connection with WhatsApp service.
-	WhatsAppConnectionTimeout = "WAPI_WHATSAPP_CONNECTION_TIMEOUT"
-	// Directory of storing static files.
-	FileSystemRootPoint = "WAPI_FILE_SYSTEM_ROOT_POINT_FULL_PATH"
-	// Webhook url.
-	WebHookURL = "WAPI_GETTING_MESSAGES_WEBHOOK"
-	// Redis host.
-	RedisHost = "WAPI_REDIS_HOST"
-	// Wapi environment: dev or prod.
-	Env = "WAPI_ENV"
-	// Path to certificate file.
-	CertFilePath = "WAPI_CERT_FILE_PATH"
-	// Path to certificate key file.
-	CertKeyPath = "WAPI_CERT_KEY_PATH"
-	// Sentry connection string.
-	SentryDSN = "WAPI_SENTRY_DSN"
-	// Connections checkout durations in seconds.
-	ConnectionsCheckoutDuration = "WAPI_CONNECTIONS_CHECKOUT_DURATION_SECS"
+	ListenHTTPHost = "WAPI_INTERNAL_HOST" // Service HTTP host aka API url.
+	// WhatsAppConnectionTimeout represents timeout of establishing connection with WhatsApp service in seconds.
+	WhatsAppConnectionTimeout   = "WAPI_WHATSAPP_CONNECTION_TIMEOUT"
+	FileSystemRootPoint         = "WAPI_FILE_SYSTEM_ROOT_POINT_FULL_PATH"   // Path of storing static files.
+	WebHookURL                  = "WAPI_GETTING_MESSAGES_WEBHOOK"           // Base webhook url.
+	RedisHost                   = "WAPI_REDIS_HOST"                         // Redis host.
+	Env                         = "WAPI_ENV"                                // Wapi environment: dev or prod.
+	CertFilePath                = "WAPI_CERT_FILE_PATH"                     // Path to certificate file.
+	CertKeyPath                 = "WAPI_CERT_KEY_PATH"                      // Path to certificate key file.
+	SentryDSN                   = "WAPI_SENTRY_DSN"                         // Sentry connection string.
+	ConnectionsCheckoutDuration = "WAPI_CONNECTIONS_CHECKOUT_DURATION_SECS" // Connections checkout durations in seconds.
 
-	// Development mode value of wapi environment.
-	DevMode = "dev"
-	// Production mode value of wapi environment.
-	ProdMode = "prod"
+	DevMode  = "dev"  // Development mode value of wapi environment.
+	ProdMode = "prod" // Production mode value of wapi environment.
 
-	DefaultConnectionsCheckoutDuration = 60
-	DefaultConnectionTimeout           = 20
+	DefaultConnectionsCheckoutDuration = 60 // Default timeout of establishing connection with WhatsApp service in seconds.
+	DefaultConnectionTimeout           = 20 // Default connections checkout durations in seconds.
 )
 
 // Config stores all application parameters.
@@ -62,33 +51,34 @@ func New() (*Config, error) {
 		return nil, fmt.Errorf("`%s` param allowed values: `%s`, `%s`", Env, DevMode, ProdMode)
 	}
 
-	listenHost := os.Getenv(ListenHTTPHost)
-	if listenHost == "" {
+	var listenHost string
+	var envExists bool
+	if listenHost, envExists = os.LookupEnv(ListenHTTPHost); !envExists {
 		return nil, fmt.Errorf("required evironment variable `%s` isn't set", ListenHTTPHost)
 	}
 
-	checkoutDuration, err := strconv.ParseInt(os.Getenv(ConnectionsCheckoutDuration), 10, 64)
+	checkoutDuration, err := strconv.Atoi(os.Getenv(ConnectionsCheckoutDuration))
 	if err != nil {
 		checkoutDuration = DefaultConnectionsCheckoutDuration
 	}
 
-	connectionTimeout, err := strconv.ParseInt(os.Getenv(WhatsAppConnectionTimeout), 10, 64)
+	connectionTimeout, err := strconv.Atoi(os.Getenv(WhatsAppConnectionTimeout))
 	if err != nil {
 		connectionTimeout = DefaultConnectionTimeout
 	}
 
-	filesRootPath := os.Getenv(FileSystemRootPoint)
-	if filesRootPath == "" {
+	var filesRootPath string
+	if filesRootPath, envExists = os.LookupEnv(FileSystemRootPoint); !envExists {
 		return nil, fmt.Errorf("required evironment variable `%s` isn't set", FileSystemRootPoint)
 	}
 
-	redisHost := os.Getenv(RedisHost)
-	if redisHost == "" {
+	var redisHost string
+	if redisHost, envExists = os.LookupEnv(RedisHost); !envExists {
 		return nil, fmt.Errorf("required evironment variable `%s` isn't set", RedisHost)
 	}
 
-	webHookURL := os.Getenv(WebHookURL)
-	if webHookURL == "" {
+	var webHookURL string
+	if webHookURL, envExists = os.LookupEnv(WebHookURL); !envExists {
 		return nil, fmt.Errorf("required evironment variable `%s` isn't set", WebHookURL)
 	}
 	if webHookURL[len(webHookURL)-1:] != "/" {
@@ -97,7 +87,7 @@ func New() (*Config, error) {
 
 	return &Config{
 		ListenHTTPHost:              listenHost,
-		ConnectionTimeout:           int(connectionTimeout),
+		ConnectionTimeout:           connectionTimeout,
 		FileSystemRootPath:          filesRootPath,
 		WebHookURL:                  webHookURL,
 		RedisHost:                   redisHost,
@@ -105,6 +95,6 @@ func New() (*Config, error) {
 		CertFilePath:                os.Getenv(CertFilePath),
 		CertKeyPath:                 os.Getenv(CertKeyPath),
 		SentryDSN:                   os.Getenv(SentryDSN),
-		ConnectionsCheckoutDuration: int(checkoutDuration),
+		ConnectionsCheckoutDuration: checkoutDuration,
 	}, nil
 }
