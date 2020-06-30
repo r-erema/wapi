@@ -2,6 +2,7 @@ package session
 
 import (
 	"encoding/gob"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -18,7 +19,7 @@ type FileSystemSession struct {
 	sessionStoragePath string
 }
 
-// Creates File System Repository.
+// NewFileSystem creates File System Repository.
 func NewFileSystem(sessionStoragePath string) (*FileSystemSession, error) {
 	if _, err := os.Stat(sessionStoragePath); os.IsNotExist(err) {
 		err := os.MkdirAll(sessionStoragePath, os.ModePerm)
@@ -29,7 +30,7 @@ func NewFileSystem(sessionStoragePath string) (*FileSystemSession, error) {
 	return &FileSystemSession{sessionStoragePath: sessionStoragePath}, nil
 }
 
-// Retrieves session from repository.
+// ReadSession retrieves session from repository.
 func (f FileSystemSession) ReadSession(sessionID string) (*session.WapiSession, error) {
 	ws := &session.WapiSession{}
 	file, err := os.Open(f.resolveSessionFilePath(sessionID))
@@ -50,7 +51,7 @@ func (f FileSystemSession) ReadSession(sessionID string) (*session.WapiSession, 
 	return ws, nil
 }
 
-// Retrieves session from repository.
+// WriteSession retrieves session from repository.
 func (f FileSystemSession) WriteSession(s *session.WapiSession) error {
 	file, err := os.Create(f.resolveSessionFilePath(s.SessionID))
 	if err != nil {
@@ -70,7 +71,7 @@ func (f FileSystemSession) WriteSession(s *session.WapiSession) error {
 	return nil
 }
 
-// Retrieves all sessions ids from repository.
+// AllSavedSessionIds retrieves all sessions ids from repository.
 func (f FileSystemSession) AllSavedSessionIds() ([]string, error) {
 	var ids []string
 	files, err := ioutil.ReadDir(f.sessionStoragePath)
@@ -87,7 +88,7 @@ func (f FileSystemSession) AllSavedSessionIds() ([]string, error) {
 	return ids, nil
 }
 
-// Removes session from repository.
+// RemoveSession removes session from repository.
 func (f FileSystemSession) RemoveSession(sessionID string) error {
 	if err := os.Remove(f.resolveSessionFilePath(sessionID)); err != nil {
 		return err
@@ -96,5 +97,5 @@ func (f FileSystemSession) RemoveSession(sessionID string) error {
 }
 
 func (f FileSystemSession) resolveSessionFilePath(sessionID string) string {
-	return f.sessionStoragePath + "/" + sessionID + sessionFileExt
+	return fmt.Sprintf("%s/%s%s", f.sessionStoragePath, sessionID, sessionFileExt)
 }

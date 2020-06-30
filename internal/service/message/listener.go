@@ -14,13 +14,13 @@ import (
 	"github.com/r-erema/wapi/internal/service/supervisor"
 )
 
-// Listens for incoming messages from WhatsApp server.
+// Listener listens for incoming messages from WhatsApp server.
 type Listener interface {
 	// Receives messages from WhatsApp server and propagates them to handlers.
 	ListenForSession(sessionID string, wg *sync.WaitGroup) (gracefulDone bool, err error)
 }
 
-// Listens for incoming messages and propagate them to webhook handler.
+// WebHook listens for incoming messages and propagate them to webhook handler.
 type WebHook struct {
 	sessionWorks          sessionRepo.Repository
 	connectionsSupervisor supervisor.Connections
@@ -29,7 +29,7 @@ type WebHook struct {
 	msgRepo               message.Repository
 }
 
-// Creates listener for sending messages to webhook.
+// NewWebHook creates listener for sending messages to webhook.
 func NewWebHook(
 	sessionWorks sessionRepo.Repository,
 	connectionsSupervisor supervisor.Connections,
@@ -46,6 +46,7 @@ func NewWebHook(
 	}
 }
 
+// Receives messages from WhatsApp server and propagates them to handlers.
 func (l *WebHook) ListenForSession(sessionID string, wg *sync.WaitGroup) (gracefulDone bool, err error) {
 	_, err = l.connectionsSupervisor.AuthenticatedConnectionForSession(sessionID)
 	if err == nil {

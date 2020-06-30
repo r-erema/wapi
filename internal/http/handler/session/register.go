@@ -11,14 +11,14 @@ import (
 	"github.com/r-erema/wapi/internal/service/message"
 )
 
-// Responsible for creation of new session.
+// RegisterSessionHandler responsible for creation of new session.
 type RegisterSessionHandler struct {
 	auth         auth.Authorizer
 	listener     message.Listener
 	sessionWorks session.Repository
 }
 
-// Creates RegisterSessionHandler.
+// NewRegisterSessionHandler creates RegisterSessionHandler.
 func NewRegisterSessionHandler(
 	authorizer auth.Authorizer,
 	l message.Listener,
@@ -71,6 +71,7 @@ func (handler *RegisterSessionHandler) startListenIncomingMessages(sessionID str
 	}
 }
 
+// TryToAutoConnectAllSessions make attempt to connect sessions automatically.
 func (handler *RegisterSessionHandler) TryToAutoConnectAllSessions() error {
 	sessionIds, err := handler.sessionWorks.AllSavedSessionIds()
 	if err != nil {
@@ -84,6 +85,7 @@ func (handler *RegisterSessionHandler) TryToAutoConnectAllSessions() error {
 	return nil
 }
 
+// RegisterSessionRequest object for registering session.
 type RegisterSessionRequest struct {
 	SessionID string `json:"session_id"`
 }

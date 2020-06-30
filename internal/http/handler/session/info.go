@@ -10,12 +10,12 @@ import (
 	sessionRepo "github.com/r-erema/wapi/internal/repository/session"
 )
 
-// Provides info about session.
+// SessInfoHandler provides info about session.
 type SessInfoHandler struct {
 	sessionWork sessionRepo.Repository
 }
 
-// Creates SessInfoHandler.
+// NewSessInfoHandler creates SessInfoHandler.
 func NewSessInfoHandler(sessionWork sessionRepo.Repository) *SessInfoHandler {
 	return &SessInfoHandler{sessionWork: sessionWork}
 }

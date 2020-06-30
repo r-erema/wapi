@@ -97,7 +97,7 @@ func runServer(
 	registerHandler session.RegisterSessionHandler,
 	sendMessageHandler message.SendTextMessageHandler,
 	sendImageHandler message.SendImageHandler,
-	getQRImageHandler qr.GetQRImageHandler,
+	getQRImageHandler qr.ImageHandler,
 	getSessionInfoHandler session.SessInfoHandler,
 	getActiveConnectionInfoHandler connection.ActiveConnectionInfoHandler,
 ) error {

@@ -11,13 +11,13 @@ import (
 	"github.com/Rhymen/go-whatsapp"
 )
 
-// Responsible for sending text messages.
+// SendTextMessageHandler responsible for sending text messages.
 type SendTextMessageHandler struct {
 	auth                  auth.Authorizer
 	connectionsSupervisor supervisor.Connections
 }
 
-// Creates SendTextMessageHandler.
+// NewTextHandler creates SendTextMessageHandler.
 func NewTextHandler(authorizer auth.Authorizer, connectionsSupervisor supervisor.Connections) *SendTextMessageHandler {
 	return &SendTextMessageHandler{auth: authorizer, connectionsSupervisor: connectionsSupervisor}
 }
@@ -71,6 +71,7 @@ func (handler *SendTextMessageHandler) ServeHTTP(w http.ResponseWriter, r *http.
 	}
 }
 
+// SendMessageRequest is the request for sending text message to WhatsApp.
 type SendMessageRequest struct {
 	ChatID    string `json:"chat_id"`
 	Text      string `json:"text"`
