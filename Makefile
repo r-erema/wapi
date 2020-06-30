@@ -24,3 +24,7 @@ ifeq ("$(wildcard $(GOLANGCI_LINT_PATH))","")
 	| sh -s -- -b $(GOLANGCI_LINT_PATH) $(GOLANGCI_LINT_VERSION)
 endif
 	$(GOLANGCI_LINT_PATH)/golangci-lint run -v
+
+test-cover:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out

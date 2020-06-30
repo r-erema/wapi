@@ -32,6 +32,9 @@ const (
 	DevMode = "dev"
 	// Production mode value of wapi environment.
 	ProdMode = "prod"
+
+	DefaultConnectionsCheckoutDuration = 60
+	DefaultConnectionTimeout           = 20
 )
 
 // Config stores all application parameters.
@@ -46,7 +49,7 @@ type Config struct {
 	SentryDSN,
 	CertKeyPath string
 	ConnectionsCheckoutDuration,
-	ConnectionTimeout int64
+	ConnectionTimeout int
 }
 
 // New creates common config contains all application parameters.
@@ -66,12 +69,12 @@ func New() (*Config, error) {
 
 	checkoutDuration, err := strconv.ParseInt(os.Getenv(ConnectionsCheckoutDuration), 10, 64)
 	if err != nil {
-		checkoutDuration = 600
+		checkoutDuration = DefaultConnectionsCheckoutDuration
 	}
 
 	connectionTimeout, err := strconv.ParseInt(os.Getenv(WhatsAppConnectionTimeout), 10, 64)
 	if err != nil {
-		connectionTimeout = 20
+		connectionTimeout = DefaultConnectionTimeout
 	}
 
 	filesRootPath := os.Getenv(FileSystemRootPoint)
@@ -94,7 +97,7 @@ func New() (*Config, error) {
 
 	return &Config{
 		ListenHTTPHost:              listenHost,
-		ConnectionTimeout:           connectionTimeout,
+		ConnectionTimeout:           int(connectionTimeout),
 		FileSystemRootPath:          filesRootPath,
 		WebHookURL:                  webHookURL,
 		RedisHost:                   redisHost,
@@ -102,6 +105,6 @@ func New() (*Config, error) {
 		CertFilePath:                os.Getenv(CertFilePath),
 		CertKeyPath:                 os.Getenv(CertKeyPath),
 		SentryDSN:                   os.Getenv(SentryDSN),
-		ConnectionsCheckoutDuration: checkoutDuration,
+		ConnectionsCheckoutDuration: int(checkoutDuration),
 	}, nil
 }
