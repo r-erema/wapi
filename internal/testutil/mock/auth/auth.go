@@ -35,9 +35,9 @@ func (m *MockAuthorizer) EXPECT() *MockAuthorizerMockRecorder {
 }
 
 // Login mocks base method
-func (m *MockAuthorizer) Login(sessionId string) (*whatsapp.Conn, *session.WapiSession, error) {
+func (m *MockAuthorizer) Login(sessionID string) (*whatsapp.Conn, *session.WapiSession, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Login", sessionId)
+	ret := m.ctrl.Call(m, "Login", sessionID)
 	ret0, _ := ret[0].(*whatsapp.Conn)
 	ret1, _ := ret[1].(*session.WapiSession)
 	ret2, _ := ret[2].(error)
@@ -45,7 +45,7 @@ func (m *MockAuthorizer) Login(sessionId string) (*whatsapp.Conn, *session.WapiS
 }
 
 // Login indicates an expected call of Login
-func (mr *MockAuthorizerMockRecorder) Login(sessionId interface{}) *gomock.Call {
+func (mr *MockAuthorizerMockRecorder) Login(sessionID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockAuthorizer)(nil).Login), sessionId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockAuthorizer)(nil).Login), sessionID)
 }

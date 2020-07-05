@@ -14,9 +14,9 @@ run:
 
 # https://github.com/golang/mock
 gen-mock:
-	mockgen  -source=internal/service/auth/auth.go -destination=internal/testutil/mock/auth/auth.go
-	mockgen  -source=internal/service/listener/listener.go -destination=internal/testutil/mock/listener/listener.go
-	mockgen  -source=internal/repository/session/repository.go -destination=internal/testutil/mock/session/repository.go
+	mockgen -source=internal/service/auth/auth.go -destination=internal/testutil/mock/auth/auth.go
+	mockgen -source=internal/service/message/listener.go -destination=internal/testutil/mock/message/listener.go
+	mockgen -source=internal/repository/session/repository.go -destination=internal/testutil/mock/session/repository.go
 
 lint:
 ifeq ("$(wildcard $(GOLANGCI_LINT_PATH))","")

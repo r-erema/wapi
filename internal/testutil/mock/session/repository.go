@@ -34,18 +34,18 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // ReadSession mocks base method
-func (m *MockRepository) ReadSession(sessionId string) (*session.WapiSession, error) {
+func (m *MockRepository) ReadSession(sessionID string) (*session.WapiSession, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReadSession", sessionId)
+	ret := m.ctrl.Call(m, "ReadSession", sessionID)
 	ret0, _ := ret[0].(*session.WapiSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ReadSession indicates an expected call of ReadSession
-func (mr *MockRepositoryMockRecorder) ReadSession(sessionId interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) ReadSession(sessionID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadSession", reflect.TypeOf((*MockRepository)(nil).ReadSession), sessionId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadSession", reflect.TypeOf((*MockRepository)(nil).ReadSession), sessionID)
 }
 
 // WriteSession mocks base method
@@ -72,21 +72,21 @@ func (m *MockRepository) AllSavedSessionIds() ([]string, error) {
 }
 
 // AllSavedSessionIds indicates an expected call of AllSavedSessionIds
-func (mr *MockRepositoryMockRecorder) GetAllSavedSessionIds() *gomock.Call {
+func (mr *MockRepositoryMockRecorder) AllSavedSessionIds() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AllSavedSessionIds", reflect.TypeOf((*MockRepository)(nil).AllSavedSessionIds))
 }
 
 // RemoveSession mocks base method
-func (m *MockRepository) RemoveSession(sessionId string) error {
+func (m *MockRepository) RemoveSession(sessionID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveSession", sessionId)
+	ret := m.ctrl.Call(m, "RemoveSession", sessionID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemoveSession indicates an expected call of RemoveSession
-func (mr *MockRepositoryMockRecorder) RemoveSession(sessionId interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) RemoveSession(sessionID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveSession", reflect.TypeOf((*MockRepository)(nil).RemoveSession), sessionId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveSession", reflect.TypeOf((*MockRepository)(nil).RemoveSession), sessionID)
 }

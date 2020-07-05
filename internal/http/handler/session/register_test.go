@@ -7,13 +7,14 @@ import (
 	"sync"
 	"testing"
 
+	sessionModel "github.com/r-erema/wapi/internal/model/session"
+	mockAuth "github.com/r-erema/wapi/internal/testutil/mock/auth"
+	mockListener "github.com/r-erema/wapi/internal/testutil/mock/message"
+	mockSession "github.com/r-erema/wapi/internal/testutil/mock/session"
+
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/gavv/httpexpect/v2"
 	"github.com/golang/mock/gomock"
-	sessionModel "github.com/r-erema/wapi/internal/model/session"
-	mockAuth "github.com/r-erema/wapi/internal/testutil/mock/auth"
-	mockListener "github.com/r-erema/wapi/internal/testutil/mock/listener"
-	mockSession "github.com/r-erema/wapi/internal/testutil/mock/session"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -82,7 +83,7 @@ func TestFailRestoreSessions(t *testing.T) {
 	auth, listener, _ := prepareMocks(t)
 	mockCtrl := gomock.NewController(t)
 	sessionRepo := mockSession.NewMockRepository(mockCtrl)
-	sessionRepo.EXPECT().GetAllSavedSessionIds().DoAndReturn(func() ([]string, error) {
+	sessionRepo.EXPECT().AllSavedSessionIds().DoAndReturn(func() ([]string, error) {
 		return nil, fmt.Errorf("something went wrong... ")
 	})
 	handler := NewRegisterSessionHandler(auth, listener, sessionRepo)
@@ -94,7 +95,7 @@ func TestSuccessRestoreSessions(t *testing.T) {
 	auth, _, _ := prepareMocks(t)
 	mockCtrl := gomock.NewController(t)
 	sessionRepo := mockSession.NewMockRepository(mockCtrl)
-	sessionRepo.EXPECT().GetAllSavedSessionIds().DoAndReturn(func() ([]string, error) {
+	sessionRepo.EXPECT().AllSavedSessionIds().DoAndReturn(func() ([]string, error) {
 		return []string{
 			"sess_id_1",
 			"sess_id_2",
@@ -121,7 +122,7 @@ func TestSkipFailedListenerOnRestoringSessions(t *testing.T) {
 	auth, _, _ := prepareMocks(t)
 	mockCtrl := gomock.NewController(t)
 	sessionRepo := mockSession.NewMockRepository(mockCtrl)
-	sessionRepo.EXPECT().GetAllSavedSessionIds().DoAndReturn(func() ([]string, error) {
+	sessionRepo.EXPECT().AllSavedSessionIds().DoAndReturn(func() ([]string, error) {
 		return []string{"sess_id_1"}, nil
 	})
 
