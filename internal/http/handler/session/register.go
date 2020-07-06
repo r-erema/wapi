@@ -73,11 +73,11 @@ func (handler *RegisterSessionHandler) startListenIncomingMessages(sessionID str
 
 // TryToAutoConnectAllSessions make attempt to connect sessions automatically.
 func (handler *RegisterSessionHandler) TryToAutoConnectAllSessions() error {
-	sessionIds, err := handler.sessionWorks.AllSavedSessionIds()
+	sessionIDs, err := handler.sessionWorks.AllSavedSessionIds()
 	if err != nil {
 		return err
 	}
-	for _, sessionID := range sessionIds {
+	for _, sessionID := range sessionIDs {
 		if err := handler.startListenIncomingMessages(sessionID); err != nil {
 			log.Printf("unable to auto connect session `%s`: %v", sessionID, err)
 		}

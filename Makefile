@@ -17,6 +17,7 @@ gen-mock:
 	mockgen -source=internal/service/auth/auth.go -destination=internal/testutil/mock/auth/auth.go
 	mockgen -source=internal/service/message/listener.go -destination=internal/testutil/mock/message/listener.go
 	mockgen -source=internal/repository/session/repository.go -destination=internal/testutil/mock/session/repository.go
+	mockgen -source=internal/service/supervisor/connection.go -destination=internal/testutil/mock/supervisor/connection.go
 
 lint:
 ifeq ("$(wildcard $(GOLANGCI_LINT_PATH))","")

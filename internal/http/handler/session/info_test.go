@@ -36,7 +36,7 @@ func TestSessInfoHandler_ServeHTTP(t *testing.T) {
 				sessionRepo := mockSession.NewMockRepository(mockCtrl)
 				sessionRepo.EXPECT().
 					ReadSession(gomock.Any()).
-					DoAndReturn(func(sessionId string) (*session.WapiSession, error) {
+					DoAndReturn(func(sessionID string) (*session.WapiSession, error) {
 						return &session.WapiSession{}, nil
 					})
 				return sessionRepo
@@ -50,7 +50,7 @@ func TestSessInfoHandler_ServeHTTP(t *testing.T) {
 				sessionRepo := mockSession.NewMockRepository(mockCtrl)
 				sessionRepo.EXPECT().
 					ReadSession(gomock.Any()).
-					DoAndReturn(func(sessionId string) (*session.WapiSession, error) {
+					DoAndReturn(func(sessionID string) (*session.WapiSession, error) {
 						return nil, &os.PathError{}
 					})
 				return sessionRepo
@@ -64,7 +64,7 @@ func TestSessInfoHandler_ServeHTTP(t *testing.T) {
 				sessionRepo := mockSession.NewMockRepository(mockCtrl)
 				sessionRepo.EXPECT().
 					ReadSession(gomock.Any()).
-					DoAndReturn(func(sessionId string) (*session.WapiSession, error) {
+					DoAndReturn(func(sessionID string) (*session.WapiSession, error) {
 						return nil, fmt.Errorf("something went wrong... ")
 					})
 				return sessionRepo
@@ -78,6 +78,7 @@ func TestSessInfoHandler_ServeHTTP(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			handler := NewSessInfoHandler(tt.mocksFactory(t))
 			server := httptest.NewServer(handler)
+			defer server.Close()
 			expect := httpexpect.New(t, server.URL)
 
 			expect.GET("/get-session-info/_sess_id_/").
@@ -92,7 +93,7 @@ func TestFailEncodeSession(t *testing.T) {
 	sessionRepo := mockSession.NewMockRepository(mockCtrl)
 	sessionRepo.EXPECT().
 		ReadSession(gomock.Any()).
-		DoAndReturn(func(sessionId string) (*session.WapiSession, error) {
+		DoAndReturn(func(sessionID string) (*session.WapiSession, error) {
 			return nil, nil
 		})
 

@@ -112,9 +112,9 @@ func runServer(
 	router.Handle("/register-session/", &registerHandler).Methods("POST")
 	router.Handle("/send-message/", &sendMessageHandler).Methods("POST")
 	router.Handle("/send-image/", &sendImageHandler).Methods("POST")
-	router.Handle("/get-qr-code/{sessionId}/", &getQRImageHandler).Methods("GET")
-	router.Handle("/get-session-info/{sessionId}/", &getSessionInfoHandler).Methods("GET")
-	router.Handle("/get-active-connection-info/{sessionId}/", &getActiveConnectionInfoHandler).Methods("GET")
+	router.Handle("/get-qr-code/{sessionID}/", &getQRImageHandler).Methods("GET")
+	router.Handle("/get-session-info/{sessionID}/", &getSessionInfoHandler).Methods("GET")
+	router.Handle("/get-active-connection-info/{sessionID}/", &getActiveConnectionInfoHandler).Methods("GET")
 
 	var err error
 	certFileExists, certKeyExists := true, true

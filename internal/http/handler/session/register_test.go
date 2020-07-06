@@ -51,10 +51,10 @@ func TestHandlerHTTPRequests(t *testing.T) {
 				listener := mockListener.NewMockListener(mockCtrl)
 				listener.EXPECT().
 					ListenForSession(gomock.Any(), gomock.Any()).
-					DoAndReturn(func(sessionId string, wg *sync.WaitGroup) (bool, error) {
+					DoAndReturn(func(sessionID string, wg *sync.WaitGroup) (bool, error) {
 						return false, fmt.Errorf("something went wrong... ")
 					}).
-					Do(func(sessionId string, wg *sync.WaitGroup) {
+					Do(func(sessionID string, wg *sync.WaitGroup) {
 						wg.Done()
 					})
 				auth, _, sessionWorks := prepareMocks(t)
@@ -69,6 +69,7 @@ func TestHandlerHTTPRequests(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			handler := NewRegisterSessionHandler(tt.mocksFactory(t))
 			server := httptest.NewServer(handler)
+			defer server.Close()
 			expect := httpexpect.New(t, server.URL)
 
 			expect.POST("/register-session/").
@@ -106,10 +107,10 @@ func TestSuccessRestoreSessions(t *testing.T) {
 	listener.EXPECT().
 		ListenForSession(gomock.Any(), gomock.Any()).
 		MinTimes(2).
-		DoAndReturn(func(sessionId string, wg *sync.WaitGroup) (bool, error) {
+		DoAndReturn(func(sessionID string, wg *sync.WaitGroup) (bool, error) {
 			return true, nil
 		}).
-		Do(func(sessionId string, wg *sync.WaitGroup) {
+		Do(func(sessionID string, wg *sync.WaitGroup) {
 			wg.Done()
 		})
 
@@ -129,10 +130,10 @@ func TestSkipFailedListenerOnRestoringSessions(t *testing.T) {
 	listener := mockListener.NewMockListener(mockCtrl)
 	listener.EXPECT().
 		ListenForSession(gomock.Any(), gomock.Any()).
-		DoAndReturn(func(sessionId string, wg *sync.WaitGroup) (bool, error) {
+		DoAndReturn(func(sessionID string, wg *sync.WaitGroup) (bool, error) {
 			return false, fmt.Errorf("something went wrong... ")
 		}).
-		Do(func(sessionId string, wg *sync.WaitGroup) {
+		Do(func(sessionID string, wg *sync.WaitGroup) {
 			wg.Done()
 		})
 
@@ -154,7 +155,7 @@ func prepareMocks(t *testing.T) (
 	listener = mockListener.NewMockListener(mockCtrl)
 	listener.EXPECT().
 		ListenForSession(gomock.Any(), gomock.Any()).
-		Do(func(sessionId string, wg *sync.WaitGroup) { wg.Done() })
+		Do(func(sessionID string, wg *sync.WaitGroup) { wg.Done() })
 	sessionRepo = mockSession.NewMockRepository(mockCtrl)
 	return
 }
