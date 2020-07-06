@@ -9,12 +9,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Rhymen/go-whatsapp"
+	infrastructureWhatsapp "github.com/r-erema/wapi/internal/infrastructure/whatsapp"
 	"github.com/r-erema/wapi/internal/model/session"
 	"github.com/r-erema/wapi/internal/repository/message"
 	storedSession "github.com/r-erema/wapi/internal/repository/session"
 	"github.com/r-erema/wapi/internal/service/supervisor"
 
-	"github.com/Rhymen/go-whatsapp"
 	"github.com/getsentry/sentry-go"
 )
 
@@ -23,7 +24,7 @@ const SentryFlushTimeoutSeconds = 5
 
 // Handler responsible handle incoming messages and errors.
 type Handler struct {
-	Connection            *whatsapp.Conn
+	Connection            infrastructureWhatsapp.Conn
 	Session               *session.WapiSession
 	messageRepo           message.Repository
 	connectionsSupervisor supervisor.Connections
@@ -34,7 +35,7 @@ type Handler struct {
 
 // NewHandler creates errors and messages handler.
 func NewHandler(
-	connection *whatsapp.Conn,
+	connection infrastructureWhatsapp.Conn,
 	wapiSession *session.WapiSession,
 	messageRepo message.Repository,
 	connectionsSupervisor supervisor.Connections,
@@ -65,7 +66,7 @@ func (h *Handler) HandleError(err error) {
 			sentry.CaptureException(fmt.Errorf(
 				"device lost connection, need to connect manually (by QR-code) `%s`, login: `%s`: %v",
 				h.Session.SessionID,
-				h.Connection.Info.Wid,
+				h.Connection.Info().Wid,
 				err,
 			))
 			sentry.Flush(time.Second * SentryFlushTimeoutSeconds)
@@ -81,7 +82,7 @@ func (h *Handler) HandleError(err error) {
 			sentry.CaptureException(fmt.Errorf(
 				"couldn't restore connection for session `%s`, login: `%s`: %v",
 				h.Session.SessionID,
-				h.Connection.Info.Wid,
+				h.Connection.Info().Wid,
 				err,
 			))
 			sentry.Flush(time.Second * SentryFlushTimeoutSeconds)

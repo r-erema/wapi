@@ -11,8 +11,8 @@ import (
 	mockAuth "github.com/r-erema/wapi/internal/testutil/mock/auth"
 	mockListener "github.com/r-erema/wapi/internal/testutil/mock/message"
 	mockSession "github.com/r-erema/wapi/internal/testutil/mock/session"
+	mockWhatsapp "github.com/r-erema/wapi/internal/testutil/mock/whatsapp"
 
-	"github.com/Rhymen/go-whatsapp"
 	"github.com/gavv/httpexpect/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -150,7 +150,8 @@ func prepareMocks(t *testing.T) (
 	sessionID := "session_id_token_81E25FCF8393C916D131A81C60AFFEB11"
 	mockCtrl := gomock.NewController(t)
 	auth = mockAuth.NewMockAuthorizer(mockCtrl)
-	auth.EXPECT().Login(sessionID).Return(&whatsapp.Conn{}, &sessionModel.WapiSession{}, nil)
+	conn := mockWhatsapp.NewMockConn(mockCtrl)
+	auth.EXPECT().Login(sessionID).Return(conn, &sessionModel.WapiSession{}, nil)
 
 	listener = mockListener.NewMockListener(mockCtrl)
 	listener.EXPECT().

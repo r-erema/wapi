@@ -5,8 +5,8 @@
 package mock_auth
 
 import (
-	whatsapp "github.com/Rhymen/go-whatsapp"
 	gomock "github.com/golang/mock/gomock"
+	whatsapp "github.com/r-erema/wapi/internal/infrastructure/whatsapp"
 	session "github.com/r-erema/wapi/internal/model/session"
 	reflect "reflect"
 )
@@ -35,10 +35,10 @@ func (m *MockAuthorizer) EXPECT() *MockAuthorizerMockRecorder {
 }
 
 // Login mocks base method
-func (m *MockAuthorizer) Login(sessionID string) (*whatsapp.Conn, *session.WapiSession, error) {
+func (m *MockAuthorizer) Login(sessionID string) (whatsapp.Conn, *session.WapiSession, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Login", sessionID)
-	ret0, _ := ret[0].(*whatsapp.Conn)
+	ret0, _ := ret[0].(whatsapp.Conn)
 	ret1, _ := ret[1].(*session.WapiSession)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2

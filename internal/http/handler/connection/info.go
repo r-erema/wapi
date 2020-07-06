@@ -33,7 +33,7 @@ func (handler *ActiveConnectionInfoHandler) ServeHTTP(w http.ResponseWriter, r *
 		return
 	}
 
-	err = json.NewEncoder(w).Encode(&Resp{ConnectionInfo: result.Wac().Info, SessionInfo: result.Session()})
+	err = json.NewEncoder(w).Encode(&Resp{ConnectionInfo: result.Wac().Info(), SessionInfo: result.Session()})
 	if err != nil {
 		errPrefix := "can't encode result"
 		http.Error(w, errPrefix, http.StatusInternalServerError)

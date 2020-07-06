@@ -25,11 +25,11 @@ type ConnectionsPool struct {
 }
 
 // Error for case of not found connection.
-type ConnectionNotFoundError struct {
+type NotFoundError struct {
 	SessionID string
 }
 
-func (m *ConnectionNotFoundError) Error() string {
+func (m *NotFoundError) Error() string {
 	return fmt.Sprintf("connection for session `%s` not found", m.SessionID)
 }
 
@@ -71,7 +71,7 @@ func (supervisor *ConnectionsPool) AuthenticatedConnectionForSession(sessionID s
 		}
 		return target, nil
 	}
-	return nil, &ConnectionNotFoundError{SessionID: sessionID}
+	return nil, &NotFoundError{SessionID: sessionID}
 }
 
 func (supervisor *ConnectionsPool) pingConnection(sessConn *SessionConnectionDTO) {
@@ -90,7 +90,7 @@ func (supervisor *ConnectionsPool) pingConnection(sessConn *SessionConnectionDTO
 						msg := fmt.Sprintf(
 							"device of session `%s` login `%s` is not responding: %v",
 							sessConn.Session().SessionID,
-							sessConn.Wac().Info.Wid,
+							sessConn.Wac().Info().Wid,
 							err,
 						)
 						sentry.CaptureMessage(msg)
@@ -105,7 +105,7 @@ func (supervisor *ConnectionsPool) pingConnection(sessConn *SessionConnectionDTO
 					msg := fmt.Sprintf(
 						"device of session `%s` login `%s` is responding again",
 						sessConn.Session().SessionID,
-						sessConn.Wac().Info.Wid,
+						sessConn.Wac().Info().Wid,
 					)
 					sentry.CaptureMessage(msg)
 					log.Printf("warning: %s", msg)

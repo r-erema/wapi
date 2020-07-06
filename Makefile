@@ -18,6 +18,8 @@ gen-mock:
 	mockgen -source=internal/service/message/listener.go -destination=internal/testutil/mock/message/listener.go
 	mockgen -source=internal/repository/session/repository.go -destination=internal/testutil/mock/session/repository.go
 	mockgen -source=internal/service/supervisor/connection.go -destination=internal/testutil/mock/supervisor/connection.go
+	mockgen -source=internal/infrastructure/http/client.go -destination=internal/testutil/mock/http/client.go
+	mockgen -source=internal/infrastructure/whatsapp/conn.go -destination=internal/testutil/mock/whatsapp/conn.go
 
 lint:
 ifeq ("$(wildcard $(GOLANGCI_LINT_PATH))","")

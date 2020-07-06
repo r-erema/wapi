@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	"github.com/r-erema/wapi/internal/http/handler/message"
 	"github.com/r-erema/wapi/internal/http/handler/qr"
 	"github.com/r-erema/wapi/internal/http/handler/session"
+	jsonInfra "github.com/r-erema/wapi/internal/infrastructure/json"
 	messageRepo "github.com/r-erema/wapi/internal/repository/message"
 	sessionRepo "github.com/r-erema/wapi/internal/repository/session"
 	"github.com/r-erema/wapi/internal/service/auth"
@@ -73,7 +75,8 @@ func main() {
 	}
 
 	sendMessageHandler := message.NewTextHandler(a, connSupervisor)
-	sendImageHandler := message.NewImageHandler(a, connSupervisor)
+	marshal := jsonInfra.MarshallCallback(json.Marshal)
+	sendImageHandler := message.NewImageHandler(a, connSupervisor, &http.Client{}, &marshal)
 	getQRImageHandler := qr.New(a)
 	getSessionInfoHandler := session.NewSessInfoHandler(sessionWorks)
 	getActiveConnectionInfoHandler := connection.New(connSupervisor)
