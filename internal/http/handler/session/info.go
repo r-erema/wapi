@@ -12,18 +12,18 @@ import (
 
 // SessInfoHandler provides info about session.
 type SessInfoHandler struct {
-	sessionWork sessionRepo.Repository
+	sessionRepo sessionRepo.Repository
 }
 
 // NewSessInfoHandler creates SessInfoHandler.
 func NewSessInfoHandler(sessionWork sessionRepo.Repository) *SessInfoHandler {
-	return &SessInfoHandler{sessionWork: sessionWork}
+	return &SessInfoHandler{sessionRepo: sessionWork}
 }
 
 func (handler *SessInfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	sessionID := params["sessionID"]
-	session, err := handler.sessionWork.ReadSession(sessionID)
+	session, err := handler.sessionRepo.ReadSession(sessionID)
 	if err != nil {
 		if _, ok := err.(*os.PathError); ok {
 			http.Error(w, "session not found", http.StatusNotFound)
@@ -34,6 +34,8 @@ func (handler *SessInfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		}
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(session)
 	if err != nil {
 		errPrefix := "can't encode session"

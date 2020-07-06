@@ -5,10 +5,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Rhymen/go-whatsapp"
-	"github.com/gorilla/mux"
 	"github.com/r-erema/wapi/internal/model/session"
 	"github.com/r-erema/wapi/internal/service/supervisor"
+
+	"github.com/Rhymen/go-whatsapp"
+	"github.com/gorilla/mux"
 )
 
 // ActiveConnectionInfoHandler provides info about connection by session ID.

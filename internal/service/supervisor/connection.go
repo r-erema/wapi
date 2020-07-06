@@ -24,6 +24,15 @@ type ConnectionsPool struct {
 	pingDevicesDuration   time.Duration
 }
 
+// Error for case of not found connection.
+type ConnectionNotFoundError struct {
+	SessionID string
+}
+
+func (m *ConnectionNotFoundError) Error() string {
+	return fmt.Sprintf("connection for session `%s` not found", m.SessionID)
+}
+
 // New creates connection supervisor.
 func New(pingDevicesDuration time.Duration) *ConnectionsPool {
 	return &ConnectionsPool{
@@ -62,7 +71,7 @@ func (supervisor *ConnectionsPool) AuthenticatedConnectionForSession(sessionID s
 		}
 		return target, nil
 	}
-	return nil, fmt.Errorf("connection for session `%s` not found", sessionID)
+	return nil, &ConnectionNotFoundError{SessionID: sessionID}
 }
 
 func (supervisor *ConnectionsPool) pingConnection(sessConn *SessionConnectionDTO) {

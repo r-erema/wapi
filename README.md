@@ -51,11 +51,11 @@ There are several parameters represented by environment variables:
 }`  
 
 * **Getting a picture of a QR code**
-> GET /get-qr-code/{sessionId}/  
+> GET /get-qr-code/{sessionID}/  
 
 
 * **Session information**  
-> GET /get-session-info/{sessionId}/  
+> GET /get-session-info/{sessionID}/  
 
 * **Web Socket connection information of particular session**  
-> GET /get-session-info/{sessionId}/  
+> GET /get-session-info/{sessionID}/  
