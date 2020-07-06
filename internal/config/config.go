@@ -52,8 +52,8 @@ func New() (*Config, error) {
 	}
 
 	var listenHost string
-	var envExists bool
-	if listenHost, envExists = os.LookupEnv(ListenHTTPHost); !envExists {
+	var ok bool
+	if listenHost, ok = os.LookupEnv(ListenHTTPHost); !ok {
 		return nil, fmt.Errorf("required evironment variable `%s` isn't set", ListenHTTPHost)
 	}
 
@@ -68,17 +68,17 @@ func New() (*Config, error) {
 	}
 
 	var filesRootPath string
-	if filesRootPath, envExists = os.LookupEnv(FileSystemRootPoint); !envExists {
+	if filesRootPath, ok = os.LookupEnv(FileSystemRootPoint); !ok {
 		return nil, fmt.Errorf("required evironment variable `%s` isn't set", FileSystemRootPoint)
 	}
 
 	var redisHost string
-	if redisHost, envExists = os.LookupEnv(RedisHost); !envExists {
+	if redisHost, ok = os.LookupEnv(RedisHost); !ok {
 		return nil, fmt.Errorf("required evironment variable `%s` isn't set", RedisHost)
 	}
 
 	var webHookURL string
-	if webHookURL, envExists = os.LookupEnv(WebHookURL); !envExists {
+	if webHookURL, ok = os.LookupEnv(WebHookURL); !ok {
 		return nil, fmt.Errorf("required evironment variable `%s` isn't set", WebHookURL)
 	}
 	if webHookURL[len(webHookURL)-1:] != "/" {
