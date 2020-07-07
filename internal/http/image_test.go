@@ -162,12 +162,7 @@ func marshalingError() testData {
 }
 
 func TestSendImageHandler(t *testing.T) {
-	tests := []struct {
-		name string
-		mocksFactory
-		jsonRequest  func() interface{}
-		expectStatus int
-	}{
+	tests := []testData{
 		ok(),
 		badImageRequest(),
 		connectionNotFound(),

@@ -34,8 +34,8 @@ func Router(
 	if err := registerHandler.TryToAutoConnectAllSessions(); err != nil {
 		log.Fatalf("error while trying restore sesssions: %s", err)
 	}
-	sendMessageHandler := NewTextHandler(authorizer, connSupervisor)
 	marshal := jsonInfra.MarshallCallback(json.Marshal)
+	sendMessageHandler := NewTextHandler(authorizer, connSupervisor, &marshal)
 	sendImageHandler := NewImageHandler(authorizer, connSupervisor, &http.Client{}, &marshal)
 	getQRImageHandler := NewQR(qrFileResolver)
 	getSessionInfoHandler := NewSessInfoHandler(sessRepo)

@@ -5,19 +5,26 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Rhymen/go-whatsapp"
+	jsonInfra "github.com/r-erema/wapi/internal/infrastructure/json"
 	"github.com/r-erema/wapi/internal/service"
+
+	"github.com/Rhymen/go-whatsapp"
 )
 
 // SendTextMessageHandler responsible for sending text messages.
 type SendTextMessageHandler struct {
 	auth                  service.Authorizer
 	connectionsSupervisor service.Connections
+	marshal               *jsonInfra.MarshallCallback
 }
 
 // NewTextHandler creates SendTextMessageHandler.
-func NewTextHandler(authorizer service.Authorizer, connectionsSupervisor service.Connections) *SendTextMessageHandler {
-	return &SendTextMessageHandler{auth: authorizer, connectionsSupervisor: connectionsSupervisor}
+func NewTextHandler(
+	authorizer service.Authorizer,
+	connectionsSupervisor service.Connections,
+	marshal *jsonInfra.MarshallCallback,
+) *SendTextMessageHandler {
+	return &SendTextMessageHandler{auth: authorizer, connectionsSupervisor: connectionsSupervisor, marshal: marshal}
 }
 
 func (handler *SendTextMessageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -55,9 +62,13 @@ func (handler *SendTextMessageHandler) ServeHTTP(w http.ResponseWriter, r *http.
 		log.Printf("%s: %v\n", errorPrefix, err)
 	}
 	log.Printf("message sent to %s by session %s \n", msgReq.ChatID, msgReq.SessionID)
-	responseBody, err := json.Marshal(&message)
+	marshal := *handler.marshal
+	responseBody, err := marshal(&message)
 	if err != nil {
-		log.Println("error message marshaling", err)
+		errorPrefix := "error message marshaling"
+		http.Error(w, errorPrefix, http.StatusInternalServerError)
+		log.Printf("%s: %v\n", errorPrefix, err)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(responseBody)
