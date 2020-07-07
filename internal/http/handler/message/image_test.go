@@ -16,11 +16,7 @@ import (
 	"github.com/r-erema/wapi/internal/service/auth"
 	"github.com/r-erema/wapi/internal/service/supervisor"
 	httpTest "github.com/r-erema/wapi/internal/testutil/http"
-	mockAuth "github.com/r-erema/wapi/internal/testutil/mock/auth"
-	mockHttp "github.com/r-erema/wapi/internal/testutil/mock/http"
-	"github.com/r-erema/wapi/internal/testutil/mock/io"
-	mockSupervisor "github.com/r-erema/wapi/internal/testutil/mock/supervisor"
-	mockWhatsapp "github.com/r-erema/wapi/internal/testutil/mock/whatsapp"
+	"github.com/r-erema/wapi/internal/testutil/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/Rhymen/go-whatsapp"
@@ -79,7 +75,7 @@ func connectionNotFound() testData {
 		func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
 			authorizer, _, client, marshal := mocks(t)
 			c := gomock.NewController(t)
-			connections := mockSupervisor.NewMockConnections(c)
+			connections := mock.NewMockConnections(c)
 			connections.EXPECT().
 				AuthenticatedConnectionForSession(gomock.Any()).
 				Return(nil, &supervisor.NotFoundError{})
@@ -96,7 +92,7 @@ func badImageURL() testData {
 		func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
 			authorizer, connections, _, marshal := mocks(t)
 			c := gomock.NewController(t)
-			httpClient := mockHttp.NewMockClient(c)
+			httpClient := mock.NewMockClient(c)
 			httpClient.EXPECT().
 				Get(gomock.Any()).
 				Return(nil, fmt.Errorf("bad image url"))
@@ -113,10 +109,10 @@ func cantReadImageBody() testData {
 		func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
 			authorizer, connections, _, marshal := mocks(t)
 			c := gomock.NewController(t)
-			httpClient := mockHttp.NewMockClient(c)
+			httpClient := mock.NewMockClient(c)
 			httpClient.EXPECT().
 				Get(gomock.Any()).
-				Return(&http.Response{Body: ioutil.NopCloser(&io.FailReader{})}, nil)
+				Return(&http.Response{Body: ioutil.NopCloser(&mock.FailReader{})}, nil)
 			return authorizer, connections, httpClient, marshal
 		},
 		imageRequest,
@@ -130,11 +126,11 @@ func errorImageSending() testData {
 		func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
 			authorizer, _, httpClient, marshal := mocks(t)
 			c := gomock.NewController(t)
-			wac := mockWhatsapp.NewMockConn(c)
+			wac := mock.NewMockConn(c)
 			wac.EXPECT().Info().Return(&whatsapp.Info{Wid: "wid"})
 			wac.EXPECT().Send(gomock.Any()).Return("", errors.New("error image sending"))
 
-			connections := mockSupervisor.NewMockConnections(c)
+			connections := mock.NewMockConnections(c)
 			connections.EXPECT().
 				AuthenticatedConnectionForSession(gomock.Any()).
 				Return(supervisor.NewDTO(wac, &session.WapiSession{}), nil)
@@ -200,7 +196,7 @@ func TestSendImageHandler(t *testing.T) {
 
 func TestFailWriteResponse(t *testing.T) {
 	handler := NewImageHandler(mocks(t))
-	w := mockHttp.NewFailResponseRecorder(httptest.NewRecorder())
+	w := mock.NewFailResponseRecorder(httptest.NewRecorder())
 	r, err := http.NewRequest("POST", "/send-image/", bytes.NewReader([]byte("{}")))
 	require.Nil(t, err)
 	handler.ServeHTTP(w, r)
@@ -208,29 +204,29 @@ func TestFailWriteResponse(t *testing.T) {
 }
 
 func mocks(t *testing.T) (
-	*mockAuth.MockAuthorizer,
-	*mockSupervisor.MockConnections,
-	*mockHttp.MockClient,
+	*mock.MockAuthorizer,
+	*mock.MockConnections,
+	*mock.MockClient,
 	*jsonInfra.MarshallCallback,
 ) {
 	c := gomock.NewController(t)
 
-	wac := mockWhatsapp.NewMockConn(c)
+	wac := mock.NewMockConn(c)
 	wac.EXPECT().Info().Return(&whatsapp.Info{Wid: "wid"})
 	wac.EXPECT().Send(gomock.Any()).Return("", nil)
 
-	connections := mockSupervisor.NewMockConnections(c)
+	connections := mock.NewMockConnections(c)
 	connections.EXPECT().
 		AuthenticatedConnectionForSession(gomock.Any()).
 		Return(supervisor.NewDTO(wac, &session.WapiSession{}), nil)
 
-	httpClient := mockHttp.NewMockClient(c)
+	httpClient := mock.NewMockClient(c)
 	httpClient.EXPECT().
 		Get(gomock.Any()).
 		Return(&http.Response{Body: ioutil.NopCloser(bytes.NewBufferString("{}"))}, nil)
 
 	marshal := jsonInfra.MarshallCallback(json.Marshal)
-	return mockAuth.NewMockAuthorizer(c), connections, httpClient, &marshal
+	return mock.NewMockAuthorizer(c), connections, httpClient, &marshal
 }
 
 func imageRequest() interface{} {

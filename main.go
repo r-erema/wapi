@@ -32,7 +32,7 @@ func main() {
 	connSupervisor := connSupervisor(conf)
 	resolver := qrFileResolver(conf)
 	authorizer := authorizer(conf, sessRepo, connSupervisor, resolver)
-	listener := messageHandling.NewWebHook(sessRepo, connSupervisor, authorizer, conf.WebHookURL, msgRepo)
+	listener := messageHandling.NewWebHook(sessRepo, connSupervisor, authorizer, conf.WebHookURL, msgRepo, &http.Client{})
 
 	router := httpInternal.Router(conf, sessRepo, connSupervisor, authorizer, resolver, listener)
 

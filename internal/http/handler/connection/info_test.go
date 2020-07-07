@@ -9,9 +9,7 @@ import (
 	"github.com/r-erema/wapi/internal/model/session"
 	"github.com/r-erema/wapi/internal/service/supervisor"
 	httpTest "github.com/r-erema/wapi/internal/testutil/http"
-	httpMock "github.com/r-erema/wapi/internal/testutil/mock/http"
-	mockSupervisor "github.com/r-erema/wapi/internal/testutil/mock/supervisor"
-	mockWhatsapp "github.com/r-erema/wapi/internal/testutil/mock/whatsapp"
+	"github.com/r-erema/wapi/internal/testutil/mock"
 
 	"github.com/gavv/httpexpect"
 	"github.com/golang/mock/gomock"
@@ -21,25 +19,25 @@ import (
 
 func TestNew(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	cs := mockSupervisor.NewMockConnections(mockCtrl)
+	cs := mock.NewMockConnections(mockCtrl)
 	assert.Equal(t, New(cs), &ActiveConnectionInfoHandler{connectionSupervisor: cs})
 }
 
 func TestActiveConnectionInfoHandler_ServeHTTP(t *testing.T) {
 	tests := []struct {
 		name         string
-		mocksFactory func(t *testing.T) *mockSupervisor.MockConnections
+		mocksFactory func(t *testing.T) *mock.MockConnections
 		expectStatus int
 	}{
 		{
 			"OK",
-			func(t *testing.T) *mockSupervisor.MockConnections {
+			func(t *testing.T) *mock.MockConnections {
 				mockCtrl := gomock.NewController(t)
-				cs := mockSupervisor.NewMockConnections(mockCtrl)
+				cs := mock.NewMockConnections(mockCtrl)
 				cs.EXPECT().
 					AuthenticatedConnectionForSession(gomock.Any()).
 					DoAndReturn(func(sessionID string) (*supervisor.SessionConnectionDTO, error) {
-						conn := mockWhatsapp.NewMockConn(mockCtrl)
+						conn := mock.NewMockConn(mockCtrl)
 						conn.EXPECT().Info().Return(&whatsapp.Info{Wid: "wid"})
 						return supervisor.NewDTO(conn, &session.WapiSession{}), nil
 					})
@@ -49,9 +47,9 @@ func TestActiveConnectionInfoHandler_ServeHTTP(t *testing.T) {
 		},
 		{
 			"Session not found",
-			func(t *testing.T) *mockSupervisor.MockConnections {
+			func(t *testing.T) *mock.MockConnections {
 				mockCtrl := gomock.NewController(t)
-				cs := mockSupervisor.NewMockConnections(mockCtrl)
+				cs := mock.NewMockConnections(mockCtrl)
 				cs.EXPECT().
 					AuthenticatedConnectionForSession(gomock.Any()).
 					DoAndReturn(func(sessionID string) (*supervisor.SessionConnectionDTO, error) {
@@ -80,16 +78,16 @@ func TestActiveConnectionInfoHandler_ServeHTTP(t *testing.T) {
 
 func TestFailEncodeConnectionInfo(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	cs := mockSupervisor.NewMockConnections(mockCtrl)
+	cs := mock.NewMockConnections(mockCtrl)
 	cs.EXPECT().
 		AuthenticatedConnectionForSession(gomock.Any()).
 		DoAndReturn(func(sessionID string) (*supervisor.SessionConnectionDTO, error) {
-			conn := mockWhatsapp.NewMockConn(mockCtrl)
+			conn := mock.NewMockConn(mockCtrl)
 			conn.EXPECT().Info().Return(&whatsapp.Info{Wid: "wid"})
 			return supervisor.NewDTO(conn, &session.WapiSession{}), nil
 		})
 	handler := New(cs)
-	w := httpMock.NewFailResponseRecorder(httptest.NewRecorder())
+	w := mock.NewFailResponseRecorder(httptest.NewRecorder())
 	r, err := http.NewRequest("GET", "/get-active-connection-info/_sess_id_/", nil)
 	require.Nil(t, err)
 

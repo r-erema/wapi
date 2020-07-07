@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	httpInfra "github.com/r-erema/wapi/internal/infrastructure/http"
 	"github.com/r-erema/wapi/internal/repository/message"
 	sessionRepo "github.com/r-erema/wapi/internal/repository/session"
 	"github.com/r-erema/wapi/internal/service/auth"
@@ -27,6 +28,7 @@ type WebHook struct {
 	auth                  auth.Authorizer
 	webhookURL            string
 	msgRepo               message.Repository
+	client                httpInfra.Client
 }
 
 // NewWebHook creates listener for sending messages to webhook.
@@ -36,6 +38,7 @@ func NewWebHook(
 	authorizer auth.Authorizer,
 	webhookURL string,
 	msgRepo message.Repository,
+	client httpInfra.Client,
 ) *WebHook {
 	return &WebHook{
 		sessionWorks:          sessionWorks,
@@ -43,6 +46,7 @@ func NewWebHook(
 		auth:                  authorizer,
 		webhookURL:            webhookURL,
 		msgRepo:               msgRepo,
+		client:                client,
 	}
 }
 
@@ -69,6 +73,7 @@ func (l *WebHook) ListenForSession(sessionID string, wg *sync.WaitGroup) (gracef
 		l.msgRepo,
 		l.connectionsSupervisor,
 		l.sessionWorks,
+		l.client,
 		uint64(time.Now().Unix()),
 		l.webhookURL,
 	))

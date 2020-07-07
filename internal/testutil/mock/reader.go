@@ -1,4 +1,4 @@
-package io
+package mock
 
 import "errors"
 

@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"time"
 
+	httpInfra "github.com/r-erema/wapi/internal/infrastructure/http"
 	infrastructureWhatsapp "github.com/r-erema/wapi/internal/infrastructure/whatsapp"
 	"github.com/r-erema/wapi/internal/model/session"
 	"github.com/r-erema/wapi/internal/repository/message"
@@ -29,6 +29,7 @@ type Handler struct {
 	messageRepo           message.Repository
 	connectionsSupervisor supervisor.Connections
 	storedSession         storedSession.Repository
+	client                httpInfra.Client
 	InitTimestamp         uint64
 	WebhookURL            string
 }
@@ -39,7 +40,8 @@ func NewHandler(
 	wapiSession *session.WapiSession,
 	messageRepo message.Repository,
 	connectionsSupervisor supervisor.Connections,
-	sessionWorks storedSession.Repository,
+	sessionRepo storedSession.Repository,
+	client httpInfra.Client,
 	initTimestamp uint64,
 	webhookURL string,
 ) *Handler {
@@ -50,7 +52,8 @@ func NewHandler(
 		InitTimestamp:         initTimestamp,
 		WebhookURL:            webhookURL,
 		connectionsSupervisor: connectionsSupervisor,
-		storedSession:         sessionWorks,
+		storedSession:         sessionRepo,
+		client:                client,
 	}
 }
 
@@ -128,7 +131,8 @@ func (h *Handler) HandleTextMessage(msg *whatsapp.TextMessage) {
 	if err != nil {
 		log.Println("error msg marshaling", err)
 	}
-	resp, err := http.Post(h.SessionWebhookURL(), "application/json", bytes.NewBuffer(requestBody))
+
+	resp, err := h.client.Post(h.SessionWebhookURL(), "application/json", bytes.NewBuffer(requestBody))
 
 	if err != nil {
 		log.Println("error happened getting the response", err)
