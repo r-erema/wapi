@@ -8,6 +8,8 @@ import (
 	"net/http"
 
 	"github.com/Rhymen/go-whatsapp"
+	httpInfra "github.com/r-erema/wapi/internal/infrastructure/http"
+	jsonInfra "github.com/r-erema/wapi/internal/infrastructure/json"
 	"github.com/r-erema/wapi/internal/service/auth"
 	"github.com/r-erema/wapi/internal/service/supervisor"
 )
@@ -16,14 +18,26 @@ import (
 type SendImageHandler struct {
 	auth                  auth.Authorizer
 	connectionsSupervisor supervisor.Connections
+	httpClient            httpInfra.Client
+	marshal               *jsonInfra.MarshallCallback
 }
 
 // NewImageHandler creates SendImageHandler.
-func NewImageHandler(authorizer auth.Authorizer, connectionsSupervisor supervisor.Connections) *SendImageHandler {
-	return &SendImageHandler{auth: authorizer, connectionsSupervisor: connectionsSupervisor}
+func NewImageHandler(
+	authorizer auth.Authorizer,
+	connectionsSupervisor supervisor.Connections,
+	client httpInfra.Client,
+	marshal *jsonInfra.MarshallCallback,
+) *SendImageHandler {
+	return &SendImageHandler{
+		auth:                  authorizer,
+		connectionsSupervisor: connectionsSupervisor,
+		httpClient:            client,
+		marshal:               marshal,
+	}
 }
 
-func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var msgReq SendImageRequest
 	err := decoder.Decode(&msgReq)
@@ -34,7 +48,7 @@ func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	sessConnDTO, err := handler.connectionsSupervisor.AuthenticatedConnectionForSession(msgReq.SessionID)
+	sessConnDTO, err := h.connectionsSupervisor.AuthenticatedConnectionForSession(msgReq.SessionID)
 	if err != nil {
 		var errorPrefix = "session not registered"
 		http.Error(w, errorPrefix, http.StatusBadRequest)
@@ -43,7 +57,7 @@ func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	}
 	wac := sessConnDTO.Wac()
 
-	response, err := http.Get(msgReq.ImageURL)
+	response, err := h.httpClient.Get(msgReq.ImageURL)
 	if err != nil {
 		errorPrefix := "image url error"
 		http.Error(w, errorPrefix, http.StatusBadRequest)
@@ -67,7 +81,7 @@ func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	message := whatsapp.ImageMessage{
 		Info: whatsapp.MessageInfo{
 			RemoteJid: msgReq.ChatID,
-			SenderJid: wac.Info.Wid,
+			SenderJid: wac.Info().Wid,
 		},
 		Type:    http.DetectContentType(img),
 		Content: response.Body,
@@ -81,9 +95,13 @@ func (handler *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		log.Printf("%s: %v\n", errorPrefix, err)
 	}
 	log.Printf("message sent to %s by session %s \n", msgReq.ChatID, msgReq.SessionID)
-	responseBody, err := json.Marshal(&message)
+	marshal := *h.marshal
+	responseBody, err := marshal(&message)
 	if err != nil {
-		log.Println("error message marshaling", err)
+		var errorPrefix = "error message marshaling"
+		http.Error(w, errorPrefix, http.StatusInternalServerError)
+		log.Printf("%s: %v\n", errorPrefix, err)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(responseBody)

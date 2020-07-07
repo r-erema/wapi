@@ -6,19 +6,19 @@ import (
 	"os"
 	"time"
 
+	qrCode "github.com/Baozisoftware/qrcode-terminal-go"
+	whatsappRhymen "github.com/Rhymen/go-whatsapp"
+	"github.com/r-erema/wapi/internal/infrastructure/whatsapp"
 	sessionModel "github.com/r-erema/wapi/internal/model/session"
 	sessionRepo "github.com/r-erema/wapi/internal/repository/session"
 	"github.com/r-erema/wapi/internal/service/supervisor"
-
-	qrCode "github.com/Baozisoftware/qrcode-terminal-go"
-	"github.com/Rhymen/go-whatsapp"
 	"github.com/skip2/go-qrcode"
 )
 
 // Authorizer responsible for users authorization.
 type Authorizer interface {
 	// Authorizes user whether by stored session file or by qr-code.
-	Login(sessionID string) (*whatsapp.Conn, *sessionModel.WapiSession, error)
+	Login(sessionID string) (whatsapp.Conn, *sessionModel.WapiSession, error)
 }
 
 // Auth responsible for users authorization using qr-code or stored session.
@@ -52,8 +52,8 @@ func New(
 }
 
 // Authorizes user whether by stored session file or by qr-code.
-func (auth *Auth) Login(sessionID string) (*whatsapp.Conn, *sessionModel.WapiSession, error) {
-	wac, err := whatsapp.NewConn(auth.timeoutConnection)
+func (auth *Auth) Login(sessionID string) (whatsapp.Conn, *sessionModel.WapiSession, error) {
+	wac, err := whatsapp.NewRhymenConn(auth.timeoutConnection)
 	if err != nil {
 		return nil, nil, fmt.Errorf("create connection failed for session `%s`: %v", sessionID, err)
 	}
@@ -80,7 +80,7 @@ func (auth *Auth) Login(sessionID string) (*whatsapp.Conn, *sessionModel.WapiSes
 				log.Printf("can't save QR-code as file: %v", err)
 			}
 		}()
-		var session whatsapp.Session
+		var session whatsappRhymen.Session
 		session, err = wac.Login(qr)
 		removeErr := os.Remove(auth.ResolveQrFilePath(sessionID))
 		if removeErr != nil {

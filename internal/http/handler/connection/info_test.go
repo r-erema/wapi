@@ -11,6 +11,7 @@ import (
 	httpTest "github.com/r-erema/wapi/internal/testutil/http"
 	httpMock "github.com/r-erema/wapi/internal/testutil/mock/http"
 	mockSupervisor "github.com/r-erema/wapi/internal/testutil/mock/supervisor"
+	mockWhatsapp "github.com/r-erema/wapi/internal/testutil/mock/whatsapp"
 
 	"github.com/gavv/httpexpect"
 	"github.com/golang/mock/gomock"
@@ -38,7 +39,9 @@ func TestActiveConnectionInfoHandler_ServeHTTP(t *testing.T) {
 				cs.EXPECT().
 					AuthenticatedConnectionForSession(gomock.Any()).
 					DoAndReturn(func(sessionID string) (*supervisor.SessionConnectionDTO, error) {
-						return supervisor.NewDTO(&whatsapp.Conn{}, &session.WapiSession{}), nil
+						conn := mockWhatsapp.NewMockConn(mockCtrl)
+						conn.EXPECT().Info().Return(&whatsapp.Info{Wid: "wid"})
+						return supervisor.NewDTO(conn, &session.WapiSession{}), nil
 					})
 				return cs
 			},
@@ -52,7 +55,7 @@ func TestActiveConnectionInfoHandler_ServeHTTP(t *testing.T) {
 				cs.EXPECT().
 					AuthenticatedConnectionForSession(gomock.Any()).
 					DoAndReturn(func(sessionID string) (*supervisor.SessionConnectionDTO, error) {
-						return nil, &supervisor.ConnectionNotFoundError{SessionID: sessionID}
+						return nil, &supervisor.NotFoundError{SessionID: sessionID}
 					})
 				return cs
 			},
@@ -81,7 +84,9 @@ func TestFailEncodeConnectionInfo(t *testing.T) {
 	cs.EXPECT().
 		AuthenticatedConnectionForSession(gomock.Any()).
 		DoAndReturn(func(sessionID string) (*supervisor.SessionConnectionDTO, error) {
-			return supervisor.NewDTO(&whatsapp.Conn{}, &session.WapiSession{}), nil
+			conn := mockWhatsapp.NewMockConn(mockCtrl)
+			conn.EXPECT().Info().Return(&whatsapp.Info{Wid: "wid"})
+			return supervisor.NewDTO(conn, &session.WapiSession{}), nil
 		})
 	handler := New(cs)
 	w := httpMock.NewFailResponseRecorder(httptest.NewRecorder())

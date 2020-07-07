@@ -1,7 +1,7 @@
-package http
+package mockHttp
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 )
@@ -19,7 +19,7 @@ func (f *FailResponseRecorder) Header() http.Header {
 }
 
 func (f *FailResponseRecorder) Write(bytes []byte) (int, error) {
-	return len(bytes), fmt.Errorf("writing error")
+	return len(bytes), errors.New("writing error")
 }
 
 func (f *FailResponseRecorder) WriteHeader(statusCode int) {

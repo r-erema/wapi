@@ -45,7 +45,7 @@ func (handler *SendTextMessageHandler) ServeHTTP(w http.ResponseWriter, r *http.
 	message := whatsapp.TextMessage{
 		Info: whatsapp.MessageInfo{
 			RemoteJid: msgReq.ChatID,
-			SenderJid: wac.Info.Wid,
+			SenderJid: wac.Info().Wid,
 		},
 		Text: msgReq.Text,
 	}
