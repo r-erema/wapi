@@ -1,4 +1,4 @@
-package connection
+package http
 
 import (
 	"encoding/json"
@@ -17,8 +17,8 @@ type ActiveConnectionInfoHandler struct {
 	connectionSupervisor supervisor.Connections
 }
 
-// New creates ActiveConnectionInfoHandler.
-func New(connectionSupervisor supervisor.Connections) *ActiveConnectionInfoHandler {
+// NewInfo creates ActiveConnectionInfoHandler.
+func NewInfo(connectionSupervisor supervisor.Connections) *ActiveConnectionInfoHandler {
 	return &ActiveConnectionInfoHandler{connectionSupervisor: connectionSupervisor}
 }
 

@@ -1,4 +1,4 @@
-package session
+package http
 
 import (
 	"encoding/json"

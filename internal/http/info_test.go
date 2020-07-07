@@ -1,4 +1,4 @@
-package connection
+package http
 
 import (
 	"net/http"
@@ -20,7 +20,7 @@ import (
 func TestNew(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	cs := mock.NewMockConnections(mockCtrl)
-	assert.Equal(t, New(cs), &ActiveConnectionInfoHandler{connectionSupervisor: cs})
+	assert.Equal(t, NewInfo(cs), &ActiveConnectionInfoHandler{connectionSupervisor: cs})
 }
 
 func TestActiveConnectionInfoHandler_ServeHTTP(t *testing.T) {
@@ -64,7 +64,7 @@ func TestActiveConnectionInfoHandler_ServeHTTP(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			handler := New(tt.mocksFactory(t))
+			handler := NewInfo(tt.mocksFactory(t))
 			server := httpTest.New(map[string]http.Handler{"/get-active-connection-info/{sessionID}/": handler})
 			defer server.Close()
 
@@ -86,7 +86,7 @@ func TestFailEncodeConnectionInfo(t *testing.T) {
 			conn.EXPECT().Info().Return(&whatsapp.Info{Wid: "wid"})
 			return supervisor.NewDTO(conn, &session.WapiSession{}), nil
 		})
-	handler := New(cs)
+	handler := NewInfo(cs)
 	w := mock.NewFailResponseRecorder(httptest.NewRecorder())
 	r, err := http.NewRequest("GET", "/get-active-connection-info/_sess_id_/", nil)
 	require.Nil(t, err)

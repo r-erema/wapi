@@ -7,10 +7,6 @@ import (
 	"net/http"
 
 	"github.com/r-erema/wapi/internal/config"
-	"github.com/r-erema/wapi/internal/http/handler/connection"
-	"github.com/r-erema/wapi/internal/http/handler/message"
-	"github.com/r-erema/wapi/internal/http/handler/qr"
-	"github.com/r-erema/wapi/internal/http/handler/session"
 	jsonInfra "github.com/r-erema/wapi/internal/infrastructure/json"
 	sess "github.com/r-erema/wapi/internal/repository/session"
 	"github.com/r-erema/wapi/internal/service/auth"
@@ -37,17 +33,17 @@ func Router(
 		}
 	}
 
-	registerHandler := session.NewRegisterSessionHandler(authorizer, listener, sessRepo)
+	registerHandler := NewRegisterSessionHandler(authorizer, listener, sessRepo)
 	log.Print("trying to auto connect saved sessions if exist...")
 	if err := registerHandler.TryToAutoConnectAllSessions(); err != nil {
 		log.Fatalf("error while trying restore sesssions: %s", err)
 	}
-	sendMessageHandler := message.NewTextHandler(authorizer, connSupervisor)
+	sendMessageHandler := NewTextHandler(authorizer, connSupervisor)
 	marshal := jsonInfra.MarshallCallback(json.Marshal)
-	sendImageHandler := message.NewImageHandler(authorizer, connSupervisor, &http.Client{}, &marshal)
-	getQRImageHandler := qr.New(qrFileResolver)
-	getSessionInfoHandler := session.NewSessInfoHandler(sessRepo)
-	getActiveConnectionInfoHandler := connection.New(connSupervisor)
+	sendImageHandler := NewImageHandler(authorizer, connSupervisor, &http.Client{}, &marshal)
+	getQRImageHandler := NewQR(qrFileResolver)
+	getSessionInfoHandler := NewSessInfoHandler(sessRepo)
+	getActiveConnectionInfoHandler := NewInfo(connSupervisor)
 
 	cors := handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-type"}),

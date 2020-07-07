@@ -1,4 +1,4 @@
-package qr
+package http
 
 import (
 	"bytes"
@@ -18,8 +18,8 @@ type ImageHandler struct {
 	qrFileResolver file.QRFileResolver
 }
 
-// New creates ImageHandler.
-func New(qrFileResolver file.QRFileResolver) *ImageHandler {
+// NewInfo creates ImageHandler.
+func NewQR(qrFileResolver file.QRFileResolver) *ImageHandler {
 	return &ImageHandler{qrFileResolver: qrFileResolver}
 }
 
