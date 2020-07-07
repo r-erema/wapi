@@ -18,21 +18,21 @@ import (
 
 func TestNewSessInfoHandler(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	sessionRepo := mock.NewMockRepository(mockCtrl)
+	sessionRepo := mock.NewMockSessionRepository(mockCtrl)
 	assert.Equal(t, NewSessInfoHandler(sessionRepo), &SessInfoHandler{sessionRepo: sessionRepo})
 }
 
 func TestSessInfoHandler_ServeHTTP(t *testing.T) {
 	tests := []struct {
 		name         string
-		mocksFactory func(t *testing.T) *mock.MockRepository
+		mocksFactory func(t *testing.T) *mock.MockSessionRepository
 		expectStatus int
 	}{
 		{
 			"OK",
-			func(t *testing.T) *mock.MockRepository {
+			func(t *testing.T) *mock.MockSessionRepository {
 				mockCtrl := gomock.NewController(t)
-				sessionRepo := mock.NewMockRepository(mockCtrl)
+				sessionRepo := mock.NewMockSessionRepository(mockCtrl)
 				sessionRepo.EXPECT().
 					ReadSession(gomock.Any()).
 					DoAndReturn(func(sessionID string) (*session.WapiSession, error) {
@@ -44,9 +44,9 @@ func TestSessInfoHandler_ServeHTTP(t *testing.T) {
 		},
 		{
 			"Session not found",
-			func(t *testing.T) *mock.MockRepository {
+			func(t *testing.T) *mock.MockSessionRepository {
 				mockCtrl := gomock.NewController(t)
-				sessionRepo := mock.NewMockRepository(mockCtrl)
+				sessionRepo := mock.NewMockSessionRepository(mockCtrl)
 				sessionRepo.EXPECT().
 					ReadSession(gomock.Any()).
 					DoAndReturn(func(sessionID string) (*session.WapiSession, error) {
@@ -58,9 +58,9 @@ func TestSessInfoHandler_ServeHTTP(t *testing.T) {
 		},
 		{
 			"Internal server error",
-			func(t *testing.T) *mock.MockRepository {
+			func(t *testing.T) *mock.MockSessionRepository {
 				mockCtrl := gomock.NewController(t)
-				sessionRepo := mock.NewMockRepository(mockCtrl)
+				sessionRepo := mock.NewMockSessionRepository(mockCtrl)
 				sessionRepo.EXPECT().
 					ReadSession(gomock.Any()).
 					DoAndReturn(func(sessionID string) (*session.WapiSession, error) {
@@ -89,7 +89,7 @@ func TestSessInfoHandler_ServeHTTP(t *testing.T) {
 
 func TestFailEncodeSession(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	sessionRepo := mock.NewMockRepository(mockCtrl)
+	sessionRepo := mock.NewMockSessionRepository(mockCtrl)
 	sessionRepo.EXPECT().
 		ReadSession(gomock.Any()).
 		DoAndReturn(func(sessionID string) (*session.WapiSession, error) {

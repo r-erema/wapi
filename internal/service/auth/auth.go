@@ -8,7 +8,7 @@ import (
 
 	"github.com/r-erema/wapi/internal/infrastructure/whatsapp"
 	sessionModel "github.com/r-erema/wapi/internal/model/session"
-	sessionRepo "github.com/r-erema/wapi/internal/repository/session"
+	"github.com/r-erema/wapi/internal/repository"
 	"github.com/r-erema/wapi/internal/service/qr/file"
 	"github.com/r-erema/wapi/internal/service/supervisor"
 
@@ -26,7 +26,7 @@ type Authorizer interface {
 // Auth responsible for users authorization using qr-code or stored session.
 type Auth struct {
 	timeoutConnection     time.Duration
-	SessionWorks          sessionRepo.Repository
+	SessionWorks          repository.SessionRepository
 	connectionsSupervisor supervisor.Connections
 	fileResolver          file.QRFileResolver
 }
@@ -34,7 +34,7 @@ type Auth struct {
 // New creates Auth service.
 func New(
 	timeoutConnection time.Duration,
-	sessionWorks sessionRepo.Repository,
+	sessionWorks repository.SessionRepository,
 	connectionsSupervisor supervisor.Connections,
 	fileResolver file.QRFileResolver,
 ) *Auth {

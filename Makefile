@@ -16,7 +16,7 @@ run:
 gen-mock:
 	mockgen -package="mock" -source=internal/service/auth/auth.go -destination=internal/testutil/mock/auth.go
 	mockgen -package="mock" -source=internal/service/message/listener.go -destination=internal/testutil/mock/listener.go
-	mockgen -package="mock" -source=internal/repository/session/repository.go -destination=internal/testutil/mock/repository.go
+	mockgen -package="mock" -source=internal/repository/repository.go -destination=internal/testutil/mock/repository.go
 	mockgen -package="mock" -source=internal/service/supervisor/connection.go -destination=internal/testutil/mock/connection.go
 	mockgen -package="mock" -source=internal/infrastructure/http/client.go -destination=internal/testutil/mock/client.go
 	mockgen -package="mock" -source=internal/infrastructure/whatsapp/conn.go -destination=internal/testutil/mock/conn.go

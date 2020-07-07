@@ -8,7 +8,7 @@ import (
 
 	"github.com/r-erema/wapi/internal/config"
 	jsonInfra "github.com/r-erema/wapi/internal/infrastructure/json"
-	sess "github.com/r-erema/wapi/internal/repository/session"
+	"github.com/r-erema/wapi/internal/repository"
 	"github.com/r-erema/wapi/internal/service/auth"
 	msg "github.com/r-erema/wapi/internal/service/message"
 	"github.com/r-erema/wapi/internal/service/qr/file"
@@ -21,7 +21,7 @@ import (
 // Router creates http handlers and bind them with paths.
 func Router(
 	conf *config.Config,
-	sessRepo sess.Repository,
+	sessRepo repository.SessionRepository,
 	connSupervisor supervisor.Connections,
 	authorizer auth.Authorizer,
 	qrFileResolver file.QRFileResolver,

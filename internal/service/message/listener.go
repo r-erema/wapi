@@ -9,8 +9,7 @@ import (
 	"time"
 
 	httpInfra "github.com/r-erema/wapi/internal/infrastructure/http"
-	"github.com/r-erema/wapi/internal/repository/message"
-	sessionRepo "github.com/r-erema/wapi/internal/repository/session"
+	"github.com/r-erema/wapi/internal/repository"
 	"github.com/r-erema/wapi/internal/service/auth"
 	"github.com/r-erema/wapi/internal/service/supervisor"
 )
@@ -23,21 +22,21 @@ type Listener interface {
 
 // WebHook listens for incoming messages and propagate them to webhook handler.
 type WebHook struct {
-	sessionWorks          sessionRepo.Repository
+	sessionWorks          repository.SessionRepository
 	connectionsSupervisor supervisor.Connections
 	auth                  auth.Authorizer
 	webhookURL            string
-	msgRepo               message.Repository
+	msgRepo               repository.MessageRepository
 	client                httpInfra.Client
 }
 
 // NewWebHook creates listener for sending messages to webhook.
 func NewWebHook(
-	sessionWorks sessionRepo.Repository,
+	sessionWorks repository.SessionRepository,
 	connectionsSupervisor supervisor.Connections,
 	authorizer auth.Authorizer,
 	webhookURL string,
-	msgRepo message.Repository,
+	msgRepo repository.MessageRepository,
 	client httpInfra.Client,
 ) *WebHook {
 	return &WebHook{

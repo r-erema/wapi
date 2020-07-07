@@ -8,6 +8,7 @@ import (
 
 	"github.com/r-erema/wapi/internal/config"
 	httpInternal "github.com/r-erema/wapi/internal/http"
+	"github.com/r-erema/wapi/internal/repository"
 	messageRepo "github.com/r-erema/wapi/internal/repository/message"
 	sessionRepo "github.com/r-erema/wapi/internal/repository/session"
 	"github.com/r-erema/wapi/internal/service/auth"
@@ -54,7 +55,7 @@ func main() {
 	log.Fatal(err)
 }
 
-func msgRepo(conf *config.Config) messageRepo.Repository {
+func msgRepo(conf *config.Config) repository.MessageRepository {
 	log.Print("connecting to redis...")
 	msgRepo, err := messageRepo.NewRedis(conf.RedisHost)
 	if err != nil {
@@ -64,7 +65,7 @@ func msgRepo(conf *config.Config) messageRepo.Repository {
 	return msgRepo
 }
 
-func sessRepo(conf *config.Config) sessionRepo.Repository {
+func sessRepo(conf *config.Config) repository.SessionRepository {
 	sessRepo, err := sessionRepo.NewFileSystem(conf.FileSystemRootPath + "/sessions")
 	if err != nil {
 		log.Fatalf("can't create service `session`: %v\n", err)
@@ -86,7 +87,7 @@ func qrFileResolver(conf *config.Config) file.QRFileResolver {
 
 func authorizer(
 	conf *config.Config,
-	sessRepo sessionRepo.Repository,
+	sessRepo repository.SessionRepository,
 	connSupervisor supervisor.Connections,
 	resolver file.QRFileResolver,
 ) auth.Authorizer {

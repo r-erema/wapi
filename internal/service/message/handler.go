@@ -11,8 +11,7 @@ import (
 	httpInfra "github.com/r-erema/wapi/internal/infrastructure/http"
 	infrastructureWhatsapp "github.com/r-erema/wapi/internal/infrastructure/whatsapp"
 	"github.com/r-erema/wapi/internal/model/session"
-	"github.com/r-erema/wapi/internal/repository/message"
-	storedSession "github.com/r-erema/wapi/internal/repository/session"
+	"github.com/r-erema/wapi/internal/repository"
 	"github.com/r-erema/wapi/internal/service/supervisor"
 
 	"github.com/Rhymen/go-whatsapp"
@@ -26,9 +25,9 @@ const SentryFlushTimeoutSeconds = 5
 type Handler struct {
 	Connection            infrastructureWhatsapp.Conn
 	Session               *session.WapiSession
-	messageRepo           message.Repository
+	messageRepo           repository.MessageRepository
 	connectionsSupervisor supervisor.Connections
-	storedSession         storedSession.Repository
+	storedSession         repository.SessionRepository
 	client                httpInfra.Client
 	InitTimestamp         uint64
 	WebhookURL            string
@@ -38,9 +37,9 @@ type Handler struct {
 func NewHandler(
 	connection infrastructureWhatsapp.Conn,
 	wapiSession *session.WapiSession,
-	messageRepo message.Repository,
+	messageRepo repository.MessageRepository,
 	connectionsSupervisor supervisor.Connections,
-	sessionRepo storedSession.Repository,
+	sessionRepo repository.SessionRepository,
 	client httpInfra.Client,
 	initTimestamp uint64,
 	webhookURL string,

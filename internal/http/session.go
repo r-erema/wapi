@@ -7,16 +7,16 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-	sessionRepo "github.com/r-erema/wapi/internal/repository/session"
+	"github.com/r-erema/wapi/internal/repository"
 )
 
 // SessInfoHandler provides info about session.
 type SessInfoHandler struct {
-	sessionRepo sessionRepo.Repository
+	sessionRepo repository.SessionRepository
 }
 
 // NewSessInfoHandler creates SessInfoHandler.
-func NewSessInfoHandler(sessionWork sessionRepo.Repository) *SessInfoHandler {
+func NewSessInfoHandler(sessionWork repository.SessionRepository) *SessInfoHandler {
 	return &SessInfoHandler{sessionRepo: sessionWork}
 }
 

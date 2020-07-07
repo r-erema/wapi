@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/r-erema/wapi/internal/repository/session"
+	"github.com/r-erema/wapi/internal/repository"
 	"github.com/r-erema/wapi/internal/service/auth"
 	"github.com/r-erema/wapi/internal/service/message"
 )
@@ -15,16 +15,16 @@ import (
 type RegisterSessionHandler struct {
 	auth         auth.Authorizer
 	listener     message.Listener
-	sessionWorks session.Repository
+	sessionWorks repository.SessionRepository
 }
 
 // NewRegisterSessionHandler creates RegisterSessionHandler.
 func NewRegisterSessionHandler(
 	authorizer auth.Authorizer,
 	l message.Listener,
-	sessionWorks session.Repository,
+	sessRepo repository.SessionRepository,
 ) *RegisterSessionHandler {
-	return &RegisterSessionHandler{auth: authorizer, listener: l, sessionWorks: sessionWorks}
+	return &RegisterSessionHandler{auth: authorizer, listener: l, sessionWorks: sessRepo}
 }
 
 func (handler *RegisterSessionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
