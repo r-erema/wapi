@@ -9,13 +9,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Rhymen/go-whatsapp"
 	infrastructureWhatsapp "github.com/r-erema/wapi/internal/infrastructure/whatsapp"
 	"github.com/r-erema/wapi/internal/model/session"
 	"github.com/r-erema/wapi/internal/repository/message"
 	storedSession "github.com/r-erema/wapi/internal/repository/session"
 	"github.com/r-erema/wapi/internal/service/supervisor"
 
+	"github.com/Rhymen/go-whatsapp"
 	"github.com/getsentry/sentry-go"
 )
 
@@ -76,7 +76,7 @@ func (h *Handler) HandleError(err error) {
 		log.Printf("waiting %d sec...\n", interval)
 		<-time.After(interval * time.Second)
 		log.Println("reconnecting...")
-		_, err = h.Connection.RestoreWithSession(*h.Session.WhatsAppSession)
+		_, err = h.Connection.RestoreWithSession(h.Session.WhatsAppSession)
 		if err != nil {
 			log.Printf("restore failed, session `%v`: %v", h.Session.SessionID, err)
 			sentry.CaptureException(fmt.Errorf(

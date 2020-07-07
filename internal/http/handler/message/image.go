@@ -7,11 +7,12 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Rhymen/go-whatsapp"
 	httpInfra "github.com/r-erema/wapi/internal/infrastructure/http"
 	jsonInfra "github.com/r-erema/wapi/internal/infrastructure/json"
 	"github.com/r-erema/wapi/internal/service/auth"
 	"github.com/r-erema/wapi/internal/service/supervisor"
+
+	"github.com/Rhymen/go-whatsapp"
 )
 
 // SendImageHandler responsible for sending images.
@@ -42,26 +43,20 @@ func (h *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var msgReq SendImageRequest
 	err := decoder.Decode(&msgReq)
 	if err != nil {
-		var errorPrefix = "can't decode request"
-		http.Error(w, errorPrefix, http.StatusBadRequest)
-		log.Printf("%s: %v\n", errorPrefix, err)
+		handleError(w, "can't decode request", err, http.StatusBadRequest)
 		return
 	}
 
 	sessConnDTO, err := h.connectionsSupervisor.AuthenticatedConnectionForSession(msgReq.SessionID)
 	if err != nil {
-		var errorPrefix = "session not registered"
-		http.Error(w, errorPrefix, http.StatusBadRequest)
-		log.Printf("%s: %v\n", errorPrefix, err)
+		handleError(w, "session not registered", err, http.StatusBadRequest)
 		return
 	}
 	wac := sessConnDTO.Wac()
 
 	response, err := h.httpClient.Get(msgReq.ImageURL)
 	if err != nil {
-		errorPrefix := "image url error"
-		http.Error(w, errorPrefix, http.StatusBadRequest)
-		log.Printf("%s: %v\n", errorPrefix, err)
+		handleError(w, "image url error", err, http.StatusBadRequest)
 		return
 	}
 	defer func() {
@@ -71,9 +66,7 @@ func (h *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	img, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		errorPrefix := "reading image error"
-		http.Error(w, errorPrefix, http.StatusBadRequest)
-		log.Printf("%s: %v\n", errorPrefix, err)
+		handleError(w, "reading image error", err, http.StatusBadRequest)
 		return
 	}
 	response.Body = ioutil.NopCloser(bytes.NewBuffer(img))
@@ -90,27 +83,26 @@ func (h *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	_, err = wac.Send(message)
 	if err != nil {
-		var errorPrefix = "sending message error"
-		http.Error(w, errorPrefix, http.StatusInternalServerError)
-		log.Printf("%s: %v\n", errorPrefix, err)
+		handleError(w, "sending message error", err, http.StatusInternalServerError)
 	}
 	log.Printf("message sent to %s by session %s \n", msgReq.ChatID, msgReq.SessionID)
 	marshal := *h.marshal
 	responseBody, err := marshal(&message)
 	if err != nil {
-		var errorPrefix = "error message marshaling"
-		http.Error(w, errorPrefix, http.StatusInternalServerError)
-		log.Printf("%s: %v\n", errorPrefix, err)
+		handleError(w, "error message marshaling", err, http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(responseBody)
 	if err != nil {
-		var errorPrefix = "can't write body to response"
-		http.Error(w, errorPrefix, http.StatusInternalServerError)
-		log.Printf("%s: %v\n", errorPrefix, err)
+		handleError(w, "can't write body to response", err, http.StatusInternalServerError)
 		return
 	}
+}
+
+func handleError(w http.ResponseWriter, errorPrefix string, err error, httpStatus int) {
+	http.Error(w, errorPrefix, httpStatus)
+	log.Printf("%s: %v\n", errorPrefix, err)
 }
 
 // SendImageRequest is the request for sending image to WhatsApp.

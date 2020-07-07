@@ -93,7 +93,7 @@ func (mr *MockConnMockRecorder) Disconnect() *gomock.Call {
 }
 
 // RestoreWithSession mocks base method
-func (m *MockConn) RestoreWithSession(session whatsapp.Session) (whatsapp.Session, error) {
+func (m *MockConn) RestoreWithSession(session *whatsapp.Session) (whatsapp.Session, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RestoreWithSession", session)
 	ret0, _ := ret[0].(whatsapp.Session)

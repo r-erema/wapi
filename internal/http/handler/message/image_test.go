@@ -42,6 +42,130 @@ func TestNewImageHandler(t *testing.T) {
 	})
 }
 
+type testData struct {
+	name string
+	mocksFactory
+	jsonRequest  func() interface{}
+	expectStatus int
+}
+
+func ok() testData {
+	return testData{
+		"OK",
+		func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
+			return mocks(t)
+		},
+		imageRequest,
+		http.StatusOK,
+	}
+}
+
+func badImageRequest() testData {
+	return testData{
+		"Bad image request",
+		func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
+			return mocks(t)
+		},
+		func() interface{} {
+			return ""
+		},
+		http.StatusBadRequest,
+	}
+}
+
+func connectionNotFound() testData {
+	return testData{
+		"Connection not found",
+		func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
+			authorizer, _, client, marshal := mocks(t)
+			c := gomock.NewController(t)
+			connections := mockSupervisor.NewMockConnections(c)
+			connections.EXPECT().
+				AuthenticatedConnectionForSession(gomock.Any()).
+				Return(nil, &supervisor.NotFoundError{})
+			return authorizer, connections, client, marshal
+		},
+		imageRequest,
+		http.StatusBadRequest,
+	}
+}
+
+func badImageURL() testData {
+	return testData{
+		"Bad image url",
+		func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
+			authorizer, connections, _, marshal := mocks(t)
+			c := gomock.NewController(t)
+			httpClient := mockHttp.NewMockClient(c)
+			httpClient.EXPECT().
+				Get(gomock.Any()).
+				Return(nil, fmt.Errorf("bad image url"))
+			return authorizer, connections, httpClient, marshal
+		},
+		imageRequest,
+		http.StatusBadRequest,
+	}
+}
+
+func cantReadImageBody() testData {
+	return testData{
+		"Couldn't read image body by url",
+		func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
+			authorizer, connections, _, marshal := mocks(t)
+			c := gomock.NewController(t)
+			httpClient := mockHttp.NewMockClient(c)
+			httpClient.EXPECT().
+				Get(gomock.Any()).
+				Return(&http.Response{Body: ioutil.NopCloser(&io.FailReader{})}, nil)
+			return authorizer, connections, httpClient, marshal
+		},
+		imageRequest,
+		http.StatusBadRequest,
+	}
+}
+
+func errorImageSending() testData {
+	return testData{
+		"Error image sending",
+		func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
+			authorizer, _, httpClient, marshal := mocks(t)
+			c := gomock.NewController(t)
+			wac := mockWhatsapp.NewMockConn(c)
+			wac.EXPECT().Info().Return(&whatsapp.Info{Wid: "wid"})
+			wac.EXPECT().Send(gomock.Any()).Return("", errors.New("error image sending"))
+
+			connections := mockSupervisor.NewMockConnections(c)
+			connections.EXPECT().
+				AuthenticatedConnectionForSession(gomock.Any()).
+				Return(supervisor.NewDTO(wac, &session.WapiSession{}), nil)
+
+			return authorizer, connections, httpClient, marshal
+		},
+		imageRequest,
+		http.StatusInternalServerError,
+	}
+}
+
+func marshalingError() testData {
+	return testData{
+		"Response marshaling error",
+		func(t *testing.T) (
+			auth.Authorizer,
+			supervisor.Connections,
+			httpInfra.Client,
+			*jsonInfra.MarshallCallback,
+		) {
+			authorizer, connections, httpClient, _ := mocks(t)
+			marshal := jsonInfra.MarshallCallback(func(i interface{}) ([]byte, error) {
+				return nil, errors.New("marshaling error")
+			})
+			return authorizer, connections, httpClient, &marshal
+		},
+		imageRequest,
+		http.StatusInternalServerError,
+	}
+}
+
 func TestSendImageHandler(t *testing.T) {
 	tests := []struct {
 		name string
@@ -49,102 +173,13 @@ func TestSendImageHandler(t *testing.T) {
 		jsonRequest  func() interface{}
 		expectStatus int
 	}{
-		{
-			"OK",
-			func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
-				return mocks(t)
-			},
-			imageRequest,
-			http.StatusOK,
-		},
-		{
-			"Bad image request",
-			func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
-				return mocks(t)
-			},
-			func() interface{} {
-				return ""
-			},
-			http.StatusBadRequest,
-		},
-		{
-			"Connection not found",
-			func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
-				authorizer, _, client, marshal := mocks(t)
-				c := gomock.NewController(t)
-				connections := mockSupervisor.NewMockConnections(c)
-				connections.EXPECT().
-					AuthenticatedConnectionForSession(gomock.Any()).
-					Return(nil, &supervisor.NotFoundError{})
-				return authorizer, connections, client, marshal
-			},
-			imageRequest,
-			http.StatusBadRequest,
-		},
-		{
-			"Bad image url",
-			func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
-				authorizer, connections, _, marshal := mocks(t)
-				c := gomock.NewController(t)
-				httpClient := mockHttp.NewMockClient(c)
-				httpClient.EXPECT().
-					Get(gomock.Any()).
-					Return(nil, fmt.Errorf("bad image url"))
-				return authorizer, connections, httpClient, marshal
-			},
-			imageRequest,
-			http.StatusBadRequest,
-		},
-		{
-			"Couldn't read image body by url",
-			func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
-				authorizer, connections, _, marshal := mocks(t)
-				c := gomock.NewController(t)
-				httpClient := mockHttp.NewMockClient(c)
-				httpClient.EXPECT().
-					Get(gomock.Any()).
-					Return(&http.Response{Body: ioutil.NopCloser(&io.FailReader{})}, nil)
-				return authorizer, connections, httpClient, marshal
-			},
-			imageRequest,
-			http.StatusBadRequest,
-		},
-		{
-			"Error image sending",
-			func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
-				authorizer, _, httpClient, marshal := mocks(t)
-				c := gomock.NewController(t)
-				wac := mockWhatsapp.NewMockConn(c)
-				wac.EXPECT().Info().Return(&whatsapp.Info{Wid: "wid"})
-				wac.EXPECT().Send(gomock.Any()).Return("", errors.New("error image sending"))
-
-				connections := mockSupervisor.NewMockConnections(c)
-				connections.EXPECT().
-					AuthenticatedConnectionForSession(gomock.Any()).
-					Return(supervisor.NewDTO(wac, &session.WapiSession{}), nil)
-
-				return authorizer, connections, httpClient, marshal
-			},
-			imageRequest,
-			http.StatusInternalServerError,
-		},
-		{
-			"Response marshaling error",
-			func(t *testing.T) (
-				auth.Authorizer,
-				supervisor.Connections,
-				httpInfra.Client,
-				*jsonInfra.MarshallCallback,
-			) {
-				authorizer, connections, httpClient, _ := mocks(t)
-				marshal := jsonInfra.MarshallCallback(func(i interface{}) ([]byte, error) {
-					return nil, errors.New("marshaling error")
-				})
-				return authorizer, connections, httpClient, &marshal
-			},
-			imageRequest,
-			http.StatusInternalServerError,
-		},
+		ok(),
+		badImageRequest(),
+		connectionNotFound(),
+		badImageURL(),
+		cantReadImageBody(),
+		errorImageSending(),
+		marshalingError(),
 	}
 
 	for _, tt := range tests {

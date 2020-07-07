@@ -1,30 +1,22 @@
 package main
 
 import (
-	"crypto/tls"
-	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/r-erema/wapi/internal/config"
-	"github.com/r-erema/wapi/internal/http/handler/connection"
-	"github.com/r-erema/wapi/internal/http/handler/message"
-	"github.com/r-erema/wapi/internal/http/handler/qr"
-	"github.com/r-erema/wapi/internal/http/handler/session"
-	jsonInfra "github.com/r-erema/wapi/internal/infrastructure/json"
+	httpInternal "github.com/r-erema/wapi/internal/http"
 	messageRepo "github.com/r-erema/wapi/internal/repository/message"
 	sessionRepo "github.com/r-erema/wapi/internal/repository/session"
 	"github.com/r-erema/wapi/internal/service/auth"
 	messageHandling "github.com/r-erema/wapi/internal/service/message"
+	"github.com/r-erema/wapi/internal/service/qr/file"
 	"github.com/r-erema/wapi/internal/service/supervisor"
 
 	_ "github.com/Rhymen/go-whatsapp"
 	"github.com/getsentry/sentry-go"
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -33,105 +25,23 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Print("connecting to redis...")
-	redisClient, err := messageRepo.NewRedis(conf.RedisHost)
-	if err != nil {
-		log.Fatalf("error of init redis repo: %v\n", err)
-	}
-	log.Print("ok")
+	initSentry(conf)
 
-	if conf.SentryDSN != "" {
-		log.Print("init Sentry...")
-		err = initSentry(conf.SentryDSN)
-		if err != nil {
-			log.Fatalf("error of init sentry: %v\n", err)
-		}
-		log.Print("ok")
-	}
+	msgRepo := msgRepo(conf)
+	sessRepo := sessRepo(conf)
+	connSupervisor := connSupervisor(conf)
+	resolver := qrFileResolver(conf)
+	authorizer := authorizer(conf, sessRepo, connSupervisor, resolver)
+	listener := messageHandling.NewWebHook(sessRepo, connSupervisor, authorizer, conf.WebHookURL, msgRepo)
 
-	sessionWorks, err := sessionRepo.NewFileSystem(conf.FileSystemRootPath + "/sessions")
-	if err != nil {
-		log.Fatalf("can't create service `session`: %v\n", err)
-	}
+	router := httpInternal.Router(conf, sessRepo, connSupervisor, authorizer, resolver, listener)
 
-	connSupervisor := supervisor.New(time.Duration(conf.ConnectionsCheckoutDuration))
-
-	a, err := auth.New(
-		conf.FileSystemRootPath+"/qr-codes",
-		time.Duration(conf.ConnectionTimeout)*time.Second,
-		sessionWorks,
-		connSupervisor,
-	)
-	if err != nil {
-		log.Fatalf("can't create service `a`: %v\n", err)
-	}
-
-	l := messageHandling.NewWebHook(sessionWorks, connSupervisor, a, conf.WebHookURL, redisClient)
-
-	registerHandler := session.NewRegisterSessionHandler(a, l, sessionWorks)
-	log.Print("trying to auto connect saved sessions if exist...")
-	if err = registerHandler.TryToAutoConnectAllSessions(); err != nil {
-		log.Fatalf("error while trying restore sesssions: %s", err)
-	}
-
-	sendMessageHandler := message.NewTextHandler(a, connSupervisor)
-	marshal := jsonInfra.MarshallCallback(json.Marshal)
-	sendImageHandler := message.NewImageHandler(a, connSupervisor, &http.Client{}, &marshal)
-	getQRImageHandler := qr.New(a)
-	getSessionInfoHandler := session.NewSessInfoHandler(sessionWorks)
-	getActiveConnectionInfoHandler := connection.New(connSupervisor)
-
-	err = runServer(
-		conf,
-		*registerHandler,
-		*sendMessageHandler,
-		*sendImageHandler,
-		*getQRImageHandler,
-		*getSessionInfoHandler,
-		*getActiveConnectionInfoHandler,
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func runServer(
-	conf *config.Config,
-	registerHandler session.RegisterSessionHandler,
-	sendMessageHandler message.SendTextMessageHandler,
-	sendImageHandler message.SendImageHandler,
-	getQRImageHandler qr.ImageHandler,
-	getSessionInfoHandler session.SessInfoHandler,
-	getActiveConnectionInfoHandler connection.ActiveConnectionInfoHandler,
-) error {
-	cors := handlers.CORS(
-		handlers.AllowedHeaders([]string{"Content-type"}),
-		handlers.AllowedOrigins([]string{"*"}),
-		handlers.AllowCredentials(),
-	)
-	router := mux.NewRouter().StrictSlash(true)
-	router.Use(cors)
-
-	router.Handle("/register-session/", &registerHandler).Methods("POST")
-	router.Handle("/send-message/", &sendMessageHandler).Methods("POST")
-	router.Handle("/send-image/", &sendImageHandler).Methods("POST")
-	router.Handle("/get-qr-code/{sessionID}/", &getQRImageHandler).Methods("GET")
-	router.Handle("/get-session-info/{sessionID}/", &getSessionInfoHandler).Methods("GET")
-	router.Handle("/get-active-connection-info/{sessionID}/", &getActiveConnectionInfoHandler).Methods("GET")
-
-	var err error
 	certFileExists, certKeyExists := true, true
 	if _, err = os.Stat(conf.CertFilePath); os.IsNotExist(err) {
 		certFileExists = false
 	}
 	if _, err = os.Stat(conf.CertKeyPath); os.IsNotExist(err) {
 		certKeyExists = false
-	}
-
-	if conf.Env == config.DevMode {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true, // nolint
-		}
 	}
 
 	if !certFileExists || !certKeyExists {
@@ -141,18 +51,62 @@ func runServer(
 		log.Printf("wapi's listening at %s ...\n", conf.ListenHTTPHost)
 		err = http.ListenAndServeTLS(conf.ListenHTTPHost, conf.CertFilePath, conf.CertKeyPath, router)
 	}
-	if err != nil {
-		return err
-	}
-	return nil
+	log.Fatal(err)
 }
 
-func initSentry(dsn string) error {
-	if dsn == "" {
-		return fmt.Errorf("senrty dsn couldn't be empty")
+func msgRepo(conf *config.Config) messageRepo.Repository {
+	log.Print("connecting to redis...")
+	msgRepo, err := messageRepo.NewRedis(conf.RedisHost)
+	if err != nil {
+		log.Fatalf("error of init redis repo: %v\n", err)
 	}
-	if err := sentry.Init(sentry.ClientOptions{Dsn: dsn}); err != nil {
-		return err
+	log.Print("ok")
+	return msgRepo
+}
+
+func sessRepo(conf *config.Config) sessionRepo.Repository {
+	sessRepo, err := sessionRepo.NewFileSystem(conf.FileSystemRootPath + "/sessions")
+	if err != nil {
+		log.Fatalf("can't create service `session`: %v\n", err)
 	}
-	return nil
+	return sessRepo
+}
+
+func connSupervisor(conf *config.Config) supervisor.Connections {
+	return supervisor.New(time.Duration(conf.ConnectionsCheckoutDuration))
+}
+
+func qrFileResolver(conf *config.Config) file.QRFileResolver {
+	qrFileResolver, err := file.NewQRImgResolver(conf.FileSystemRootPath + "/qr-codes")
+	if err != nil {
+		log.Fatalf("can't create service `QR file resolver`: %v\n", err)
+	}
+	return qrFileResolver
+}
+
+func authorizer(
+	conf *config.Config,
+	sessRepo sessionRepo.Repository,
+	connSupervisor supervisor.Connections,
+	resolver file.QRFileResolver,
+) auth.Authorizer {
+	authorizer := auth.New(
+		time.Duration(conf.ConnectionTimeout)*time.Second,
+		sessRepo,
+		connSupervisor,
+		resolver,
+	)
+	return authorizer
+}
+
+func initSentry(conf *config.Config) {
+	if conf.SentryDSN != "" {
+		log.Print("init Sentry...")
+		if err := sentry.Init(sentry.ClientOptions{Dsn: conf.SentryDSN}); err != nil {
+			log.Fatalf("error of init sentry: %v\n", err)
+		}
+		log.Print("ok")
+	} else {
+		log.Print("sentry dsn not set, skip sentry init")
+	}
 }

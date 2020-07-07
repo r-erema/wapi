@@ -2,7 +2,7 @@
 // Source: internal/infrastructure/http/client.go
 
 // Package mock_http is a generated GoMock package.
-package mockHttp
+package http
 
 import (
 	gomock "github.com/golang/mock/gomock"
