@@ -7,7 +7,7 @@ import (
 	"sync"
 	"testing"
 
-	sessionModel "github.com/r-erema/wapi/internal/model/session"
+	"github.com/r-erema/wapi/internal/model"
 	"github.com/r-erema/wapi/internal/testutil/mock"
 
 	"github.com/gavv/httpexpect/v2"
@@ -148,7 +148,7 @@ func prepareMocks(t *testing.T) (
 	mockCtrl := gomock.NewController(t)
 	auth = mock.NewMockAuthorizer(mockCtrl)
 	conn := mock.NewMockConn(mockCtrl)
-	auth.EXPECT().Login(sessionID).Return(conn, &sessionModel.WapiSession{}, nil)
+	auth.EXPECT().Login(sessionID).Return(conn, &model.WapiSession{}, nil)
 
 	listener = mock.NewMockListener(mockCtrl)
 	listener.EXPECT().

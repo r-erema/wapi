@@ -6,18 +6,14 @@ import (
 	"os"
 	"time"
 
+	_ "github.com/Rhymen/go-whatsapp"
+	"github.com/getsentry/sentry-go"
 	"github.com/r-erema/wapi/internal/config"
 	httpInternal "github.com/r-erema/wapi/internal/http"
 	"github.com/r-erema/wapi/internal/repository"
 	messageRepo "github.com/r-erema/wapi/internal/repository/message"
 	sessionRepo "github.com/r-erema/wapi/internal/repository/session"
-	"github.com/r-erema/wapi/internal/service/auth"
-	messageHandling "github.com/r-erema/wapi/internal/service/message"
-	"github.com/r-erema/wapi/internal/service/qr/file"
-	"github.com/r-erema/wapi/internal/service/supervisor"
-
-	_ "github.com/Rhymen/go-whatsapp"
-	"github.com/getsentry/sentry-go"
+	"github.com/r-erema/wapi/internal/service"
 )
 
 func main() {
@@ -33,7 +29,7 @@ func main() {
 	connSupervisor := connSupervisor(conf)
 	resolver := qrFileResolver(conf)
 	authorizer := authorizer(conf, sessRepo, connSupervisor, resolver)
-	listener := messageHandling.NewWebHook(sessRepo, connSupervisor, authorizer, conf.WebHookURL, msgRepo, &http.Client{})
+	listener := service.NewWebHook(sessRepo, connSupervisor, authorizer, conf.WebHookURL, msgRepo, &http.Client{})
 
 	router := httpInternal.Router(conf, sessRepo, connSupervisor, authorizer, resolver, listener)
 
@@ -73,12 +69,12 @@ func sessRepo(conf *config.Config) repository.SessionRepository {
 	return sessRepo
 }
 
-func connSupervisor(conf *config.Config) supervisor.Connections {
-	return supervisor.New(time.Duration(conf.ConnectionsCheckoutDuration))
+func connSupervisor(conf *config.Config) service.Connections {
+	return service.NewSV(time.Duration(conf.ConnectionsCheckoutDuration))
 }
 
-func qrFileResolver(conf *config.Config) file.QRFileResolver {
-	qrFileResolver, err := file.NewQRImgResolver(conf.FileSystemRootPath + "/qr-codes")
+func qrFileResolver(conf *config.Config) service.QRFileResolver {
+	qrFileResolver, err := service.NewQRImgResolver(conf.FileSystemRootPath + "/qr-codes")
 	if err != nil {
 		log.Fatalf("can't create service `QR file resolver`: %v\n", err)
 	}
@@ -88,10 +84,10 @@ func qrFileResolver(conf *config.Config) file.QRFileResolver {
 func authorizer(
 	conf *config.Config,
 	sessRepo repository.SessionRepository,
-	connSupervisor supervisor.Connections,
-	resolver file.QRFileResolver,
-) auth.Authorizer {
-	authorizer := auth.New(
+	connSupervisor service.Connections,
+	resolver service.QRFileResolver,
+) service.Authorizer {
+	authorizer := service.New(
 		time.Duration(conf.ConnectionTimeout)*time.Second,
 		sessRepo,
 		connSupervisor,

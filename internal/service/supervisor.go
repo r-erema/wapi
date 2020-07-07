@@ -1,4 +1,4 @@
-package supervisor
+package service
 
 import (
 	"fmt"
@@ -34,7 +34,7 @@ func (m *NotFoundError) Error() string {
 }
 
 // New creates connection supervisor.
-func New(pingDevicesDuration time.Duration) *ConnectionsPool {
+func NewSV(pingDevicesDuration time.Duration) *ConnectionsPool {
 	return &ConnectionsPool{
 		connectionSessionPool: make(map[string]*SessionConnectionDTO),
 		pingDevicesDuration:   pingDevicesDuration,

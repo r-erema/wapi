@@ -1,4 +1,4 @@
-package session
+package model
 
 import "github.com/Rhymen/go-whatsapp"
 

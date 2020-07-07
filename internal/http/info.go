@@ -5,20 +5,19 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/r-erema/wapi/internal/model/session"
-	"github.com/r-erema/wapi/internal/service/supervisor"
-
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/gorilla/mux"
+	"github.com/r-erema/wapi/internal/model"
+	"github.com/r-erema/wapi/internal/service"
 )
 
 // ActiveConnectionInfoHandler provides info about connection by session ID.
 type ActiveConnectionInfoHandler struct {
-	connectionSupervisor supervisor.Connections
+	connectionSupervisor service.Connections
 }
 
 // NewInfo creates ActiveConnectionInfoHandler.
-func NewInfo(connectionSupervisor supervisor.Connections) *ActiveConnectionInfoHandler {
+func NewInfo(connectionSupervisor service.Connections) *ActiveConnectionInfoHandler {
 	return &ActiveConnectionInfoHandler{connectionSupervisor: connectionSupervisor}
 }
 
@@ -45,5 +44,5 @@ func (handler *ActiveConnectionInfoHandler) ServeHTTP(w http.ResponseWriter, r *
 
 type Resp struct {
 	ConnectionInfo *whatsapp.Info
-	SessionInfo    *session.WapiSession
+	SessionInfo    *model.WapiSession
 }

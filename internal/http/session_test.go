@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/r-erema/wapi/internal/model/session"
+	"github.com/r-erema/wapi/internal/model"
 	"github.com/r-erema/wapi/internal/testutil/mock"
 
 	"github.com/gavv/httpexpect/v2"
@@ -35,8 +35,8 @@ func TestSessInfoHandler_ServeHTTP(t *testing.T) {
 				sessionRepo := mock.NewMockSessionRepository(mockCtrl)
 				sessionRepo.EXPECT().
 					ReadSession(gomock.Any()).
-					DoAndReturn(func(sessionID string) (*session.WapiSession, error) {
-						return &session.WapiSession{}, nil
+					DoAndReturn(func(sessionID string) (*model.WapiSession, error) {
+						return &model.WapiSession{}, nil
 					})
 				return sessionRepo
 			},
@@ -49,7 +49,7 @@ func TestSessInfoHandler_ServeHTTP(t *testing.T) {
 				sessionRepo := mock.NewMockSessionRepository(mockCtrl)
 				sessionRepo.EXPECT().
 					ReadSession(gomock.Any()).
-					DoAndReturn(func(sessionID string) (*session.WapiSession, error) {
+					DoAndReturn(func(sessionID string) (*model.WapiSession, error) {
 						return nil, &os.PathError{}
 					})
 				return sessionRepo
@@ -63,7 +63,7 @@ func TestSessInfoHandler_ServeHTTP(t *testing.T) {
 				sessionRepo := mock.NewMockSessionRepository(mockCtrl)
 				sessionRepo.EXPECT().
 					ReadSession(gomock.Any()).
-					DoAndReturn(func(sessionID string) (*session.WapiSession, error) {
+					DoAndReturn(func(sessionID string) (*model.WapiSession, error) {
 						return nil, fmt.Errorf("something went wrong... ")
 					})
 				return sessionRepo
@@ -92,7 +92,7 @@ func TestFailEncodeSession(t *testing.T) {
 	sessionRepo := mock.NewMockSessionRepository(mockCtrl)
 	sessionRepo.EXPECT().
 		ReadSession(gomock.Any()).
-		DoAndReturn(func(sessionID string) (*session.WapiSession, error) {
+		DoAndReturn(func(sessionID string) (*model.WapiSession, error) {
 			return nil, nil
 		})
 

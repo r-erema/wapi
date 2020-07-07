@@ -6,26 +6,22 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 	"github.com/r-erema/wapi/internal/config"
 	jsonInfra "github.com/r-erema/wapi/internal/infrastructure/json"
 	"github.com/r-erema/wapi/internal/repository"
-	"github.com/r-erema/wapi/internal/service/auth"
-	msg "github.com/r-erema/wapi/internal/service/message"
-	"github.com/r-erema/wapi/internal/service/qr/file"
-	"github.com/r-erema/wapi/internal/service/supervisor"
-
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
+	"github.com/r-erema/wapi/internal/service"
 )
 
 // Router creates http handlers and bind them with paths.
 func Router(
 	conf *config.Config,
 	sessRepo repository.SessionRepository,
-	connSupervisor supervisor.Connections,
-	authorizer auth.Authorizer,
-	qrFileResolver file.QRFileResolver,
-	listener msg.Listener,
+	connSupervisor service.Connections,
+	authorizer service.Authorizer,
+	qrFileResolver service.QRFileResolver,
+	listener service.Listener,
 ) *mux.Router {
 	if conf.Env == config.DevMode {
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{

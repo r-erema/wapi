@@ -8,18 +8,17 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/r-erema/wapi/internal/service/qr/file"
-
 	"github.com/gorilla/mux"
+	"github.com/r-erema/wapi/internal/service"
 )
 
 // ImageHandler returns QR image.
 type ImageHandler struct {
-	qrFileResolver file.QRFileResolver
+	qrFileResolver service.QRFileResolver
 }
 
 // NewInfo creates ImageHandler.
-func NewQR(qrFileResolver file.QRFileResolver) *ImageHandler {
+func NewQR(qrFileResolver service.QRFileResolver) *ImageHandler {
 	return &ImageHandler{qrFileResolver: qrFileResolver}
 }
 

@@ -3,7 +3,7 @@ package repository
 import (
 	"time"
 
-	"github.com/r-erema/wapi/internal/model/session"
+	"github.com/r-erema/wapi/internal/model"
 )
 
 // Stores messages metadata.
@@ -17,9 +17,9 @@ type MessageRepository interface {
 // Stores sessions metadata.
 type SessionRepository interface {
 	// ReadSession retrieves session from repository.
-	ReadSession(sessionID string) (*session.WapiSession, error)
+	ReadSession(sessionID string) (*model.WapiSession, error)
 	// WriteSession retrieves session from repository.
-	WriteSession(session *session.WapiSession) error
+	WriteSession(session *model.WapiSession) error
 	// AllSavedSessionIds retrieves all sessions ids from repository.
 	AllSavedSessionIds() ([]string, error)
 	// RemoveSession removes session from repository.

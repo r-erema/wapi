@@ -1,4 +1,4 @@
-package message
+package service
 
 import (
 	"bytes"
@@ -8,14 +8,12 @@ import (
 	"log"
 	"time"
 
-	httpInfra "github.com/r-erema/wapi/internal/infrastructure/http"
-	infrastructureWhatsapp "github.com/r-erema/wapi/internal/infrastructure/whatsapp"
-	"github.com/r-erema/wapi/internal/model/session"
-	"github.com/r-erema/wapi/internal/repository"
-	"github.com/r-erema/wapi/internal/service/supervisor"
-
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/getsentry/sentry-go"
+	httpInfra "github.com/r-erema/wapi/internal/infrastructure/http"
+	infrastructureWhatsapp "github.com/r-erema/wapi/internal/infrastructure/whatsapp"
+	"github.com/r-erema/wapi/internal/model"
+	"github.com/r-erema/wapi/internal/repository"
 )
 
 // Sentry flush timout
@@ -24,9 +22,9 @@ const SentryFlushTimeoutSeconds = 5
 // Handler responsible handle incoming messages and errors.
 type Handler struct {
 	Connection            infrastructureWhatsapp.Conn
-	Session               *session.WapiSession
+	Session               *model.WapiSession
 	messageRepo           repository.MessageRepository
-	connectionsSupervisor supervisor.Connections
+	connectionsSupervisor Connections
 	storedSession         repository.SessionRepository
 	client                httpInfra.Client
 	InitTimestamp         uint64
@@ -36,9 +34,9 @@ type Handler struct {
 // NewHandler creates errors and messages handler.
 func NewHandler(
 	connection infrastructureWhatsapp.Conn,
-	wapiSession *session.WapiSession,
+	wapiSession *model.WapiSession,
 	messageRepo repository.MessageRepository,
-	connectionsSupervisor supervisor.Connections,
+	connectionsSupervisor Connections,
 	sessionRepo repository.SessionRepository,
 	client httpInfra.Client,
 	initTimestamp uint64,

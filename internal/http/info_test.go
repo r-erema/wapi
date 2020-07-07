@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/Rhymen/go-whatsapp"
-	"github.com/r-erema/wapi/internal/model/session"
-	"github.com/r-erema/wapi/internal/service/supervisor"
+	"github.com/r-erema/wapi/internal/model"
+	"github.com/r-erema/wapi/internal/service"
 	httpTest "github.com/r-erema/wapi/internal/testutil/http"
 	"github.com/r-erema/wapi/internal/testutil/mock"
 
@@ -36,10 +36,10 @@ func TestActiveConnectionInfoHandler_ServeHTTP(t *testing.T) {
 				cs := mock.NewMockConnections(mockCtrl)
 				cs.EXPECT().
 					AuthenticatedConnectionForSession(gomock.Any()).
-					DoAndReturn(func(sessionID string) (*supervisor.SessionConnectionDTO, error) {
+					DoAndReturn(func(sessionID string) (*service.SessionConnectionDTO, error) {
 						conn := mock.NewMockConn(mockCtrl)
 						conn.EXPECT().Info().Return(&whatsapp.Info{Wid: "wid"})
-						return supervisor.NewDTO(conn, &session.WapiSession{}), nil
+						return service.NewDTO(conn, &model.WapiSession{}), nil
 					})
 				return cs
 			},
@@ -52,8 +52,8 @@ func TestActiveConnectionInfoHandler_ServeHTTP(t *testing.T) {
 				cs := mock.NewMockConnections(mockCtrl)
 				cs.EXPECT().
 					AuthenticatedConnectionForSession(gomock.Any()).
-					DoAndReturn(func(sessionID string) (*supervisor.SessionConnectionDTO, error) {
-						return nil, &supervisor.NotFoundError{SessionID: sessionID}
+					DoAndReturn(func(sessionID string) (*service.SessionConnectionDTO, error) {
+						return nil, &service.NotFoundError{SessionID: sessionID}
 					})
 				return cs
 			},
@@ -81,10 +81,10 @@ func TestFailEncodeConnectionInfo(t *testing.T) {
 	cs := mock.NewMockConnections(mockCtrl)
 	cs.EXPECT().
 		AuthenticatedConnectionForSession(gomock.Any()).
-		DoAndReturn(func(sessionID string) (*supervisor.SessionConnectionDTO, error) {
+		DoAndReturn(func(sessionID string) (*service.SessionConnectionDTO, error) {
 			conn := mock.NewMockConn(mockCtrl)
 			conn.EXPECT().Info().Return(&whatsapp.Info{Wid: "wid"})
-			return supervisor.NewDTO(conn, &session.WapiSession{}), nil
+			return service.NewDTO(conn, &model.WapiSession{}), nil
 		})
 	handler := NewInfo(cs)
 	w := mock.NewFailResponseRecorder(httptest.NewRecorder())

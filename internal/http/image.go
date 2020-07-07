@@ -7,26 +7,24 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Rhymen/go-whatsapp"
 	httpInfra "github.com/r-erema/wapi/internal/infrastructure/http"
 	jsonInfra "github.com/r-erema/wapi/internal/infrastructure/json"
-	"github.com/r-erema/wapi/internal/service/auth"
-	"github.com/r-erema/wapi/internal/service/supervisor"
-
-	"github.com/Rhymen/go-whatsapp"
+	"github.com/r-erema/wapi/internal/service"
 )
 
 // SendImageHandler responsible for sending images.
 type SendImageHandler struct {
-	auth                  auth.Authorizer
-	connectionsSupervisor supervisor.Connections
+	auth                  service.Authorizer
+	connectionsSupervisor service.Connections
 	httpClient            httpInfra.Client
 	marshal               *jsonInfra.MarshallCallback
 }
 
 // NewImageHandler creates SendImageHandler.
 func NewImageHandler(
-	authorizer auth.Authorizer,
-	connectionsSupervisor supervisor.Connections,
+	authorizer service.Authorizer,
+	connectionsSupervisor service.Connections,
 	client httpInfra.Client,
 	marshal *jsonInfra.MarshallCallback,
 ) *SendImageHandler {

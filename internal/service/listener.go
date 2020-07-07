@@ -1,4 +1,4 @@
-package message
+package service
 
 import (
 	"log"
@@ -10,8 +10,6 @@ import (
 
 	httpInfra "github.com/r-erema/wapi/internal/infrastructure/http"
 	"github.com/r-erema/wapi/internal/repository"
-	"github.com/r-erema/wapi/internal/service/auth"
-	"github.com/r-erema/wapi/internal/service/supervisor"
 )
 
 // Listener listens for incoming messages from WhatsApp server.
@@ -23,8 +21,8 @@ type Listener interface {
 // WebHook listens for incoming messages and propagate them to webhook handler.
 type WebHook struct {
 	sessionWorks          repository.SessionRepository
-	connectionsSupervisor supervisor.Connections
-	auth                  auth.Authorizer
+	connectionsSupervisor Connections
+	auth                  Authorizer
 	webhookURL            string
 	msgRepo               repository.MessageRepository
 	client                httpInfra.Client
@@ -33,8 +31,8 @@ type WebHook struct {
 // NewWebHook creates listener for sending messages to webhook.
 func NewWebHook(
 	sessionWorks repository.SessionRepository,
-	connectionsSupervisor supervisor.Connections,
-	authorizer auth.Authorizer,
+	connectionsSupervisor Connections,
+	authorizer Authorizer,
 	webhookURL string,
 	msgRepo repository.MessageRepository,
 	client httpInfra.Client,

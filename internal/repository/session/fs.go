@@ -9,7 +9,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/r-erema/wapi/internal/model/session"
+	"github.com/r-erema/wapi/internal/model"
 )
 
 const sessionFileExt = ".gob"
@@ -31,8 +31,8 @@ func NewFileSystem(sessionStoragePath string) (*FileSystemSession, error) {
 }
 
 // ReadSession retrieves session from repository.
-func (f FileSystemSession) ReadSession(sessionID string) (*session.WapiSession, error) {
-	ws := &session.WapiSession{}
+func (f FileSystemSession) ReadSession(sessionID string) (*model.WapiSession, error) {
+	ws := &model.WapiSession{}
 	file, err := os.Open(f.resolveSessionFilePath(sessionID))
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (f FileSystemSession) ReadSession(sessionID string) (*session.WapiSession, 
 }
 
 // WriteSession retrieves session from repository.
-func (f FileSystemSession) WriteSession(s *session.WapiSession) error {
+func (f FileSystemSession) WriteSession(s *model.WapiSession) error {
 	file, err := os.Create(f.resolveSessionFilePath(s.SessionID))
 	if err != nil {
 		return err

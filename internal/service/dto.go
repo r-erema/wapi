@@ -1,19 +1,19 @@
-package supervisor
+package service
 
 import (
 	"github.com/r-erema/wapi/internal/infrastructure/whatsapp"
-	"github.com/r-erema/wapi/internal/model/session"
+	"github.com/r-erema/wapi/internal/model"
 )
 
 // SessionConnectionDTO containing service data for supervising.
 type SessionConnectionDTO struct {
 	wac      whatsapp.Conn
-	session  *session.WapiSession
+	session  *model.WapiSession
 	pingQuit *chan string
 }
 
 // Session gets session.
-func (s SessionConnectionDTO) Session() *session.WapiSession {
+func (s SessionConnectionDTO) Session() *model.WapiSession {
 	return s.session
 }
 
@@ -23,7 +23,7 @@ func (s SessionConnectionDTO) Wac() whatsapp.Conn {
 }
 
 // NewDTO creates DTO.
-func NewDTO(wac whatsapp.Conn, sess *session.WapiSession) *SessionConnectionDTO {
+func NewDTO(wac whatsapp.Conn, sess *model.WapiSession) *SessionConnectionDTO {
 	quitCh := make(chan string)
 	return &SessionConnectionDTO{wac: wac, session: sess, pingQuit: &quitCh}
 }

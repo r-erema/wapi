@@ -12,9 +12,8 @@ import (
 
 	httpInfra "github.com/r-erema/wapi/internal/infrastructure/http"
 	jsonInfra "github.com/r-erema/wapi/internal/infrastructure/json"
-	"github.com/r-erema/wapi/internal/model/session"
-	"github.com/r-erema/wapi/internal/service/auth"
-	"github.com/r-erema/wapi/internal/service/supervisor"
+	"github.com/r-erema/wapi/internal/model"
+	"github.com/r-erema/wapi/internal/service"
 	httpTest "github.com/r-erema/wapi/internal/testutil/http"
 	"github.com/r-erema/wapi/internal/testutil/mock"
 	"github.com/stretchr/testify/require"
@@ -25,7 +24,7 @@ import (
 	"github.com/magiconair/properties/assert"
 )
 
-type mocksFactory func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback)
+type mocksFactory func(t *testing.T) (service.Authorizer, service.Connections, httpInfra.Client, *jsonInfra.MarshallCallback)
 
 func TestNewImageHandler(t *testing.T) {
 	a, s, c, m := mocks(t)
@@ -48,7 +47,7 @@ type testData struct {
 func ok() testData {
 	return testData{
 		"OK",
-		func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
+		func(t *testing.T) (service.Authorizer, service.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
 			return mocks(t)
 		},
 		imageRequest,
@@ -59,7 +58,7 @@ func ok() testData {
 func badImageRequest() testData {
 	return testData{
 		"Bad image request",
-		func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
+		func(t *testing.T) (service.Authorizer, service.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
 			return mocks(t)
 		},
 		func() interface{} {
@@ -72,13 +71,13 @@ func badImageRequest() testData {
 func connectionNotFound() testData {
 	return testData{
 		"Connection not found",
-		func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
+		func(t *testing.T) (service.Authorizer, service.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
 			authorizer, _, client, marshal := mocks(t)
 			c := gomock.NewController(t)
 			connections := mock.NewMockConnections(c)
 			connections.EXPECT().
 				AuthenticatedConnectionForSession(gomock.Any()).
-				Return(nil, &supervisor.NotFoundError{})
+				Return(nil, &service.NotFoundError{})
 			return authorizer, connections, client, marshal
 		},
 		imageRequest,
@@ -89,7 +88,7 @@ func connectionNotFound() testData {
 func badImageURL() testData {
 	return testData{
 		"Bad image url",
-		func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
+		func(t *testing.T) (service.Authorizer, service.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
 			authorizer, connections, _, marshal := mocks(t)
 			c := gomock.NewController(t)
 			httpClient := mock.NewMockClient(c)
@@ -106,7 +105,7 @@ func badImageURL() testData {
 func cantReadImageBody() testData {
 	return testData{
 		"Couldn't read image body by url",
-		func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
+		func(t *testing.T) (service.Authorizer, service.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
 			authorizer, connections, _, marshal := mocks(t)
 			c := gomock.NewController(t)
 			httpClient := mock.NewMockClient(c)
@@ -123,7 +122,7 @@ func cantReadImageBody() testData {
 func errorImageSending() testData {
 	return testData{
 		"Error image sending",
-		func(t *testing.T) (auth.Authorizer, supervisor.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
+		func(t *testing.T) (service.Authorizer, service.Connections, httpInfra.Client, *jsonInfra.MarshallCallback) {
 			authorizer, _, httpClient, marshal := mocks(t)
 			c := gomock.NewController(t)
 			wac := mock.NewMockConn(c)
@@ -133,7 +132,7 @@ func errorImageSending() testData {
 			connections := mock.NewMockConnections(c)
 			connections.EXPECT().
 				AuthenticatedConnectionForSession(gomock.Any()).
-				Return(supervisor.NewDTO(wac, &session.WapiSession{}), nil)
+				Return(service.NewDTO(wac, &model.WapiSession{}), nil)
 
 			return authorizer, connections, httpClient, marshal
 		},
@@ -146,8 +145,8 @@ func marshalingError() testData {
 	return testData{
 		"Response marshaling error",
 		func(t *testing.T) (
-			auth.Authorizer,
-			supervisor.Connections,
+			service.Authorizer,
+			service.Connections,
 			httpInfra.Client,
 			*jsonInfra.MarshallCallback,
 		) {
@@ -218,7 +217,7 @@ func mocks(t *testing.T) (
 	connections := mock.NewMockConnections(c)
 	connections.EXPECT().
 		AuthenticatedConnectionForSession(gomock.Any()).
-		Return(supervisor.NewDTO(wac, &session.WapiSession{}), nil)
+		Return(service.NewDTO(wac, &model.WapiSession{}), nil)
 
 	httpClient := mock.NewMockClient(c)
 	httpClient.EXPECT().

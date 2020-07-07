@@ -5,10 +5,11 @@
 package mock
 
 import (
-	gomock "github.com/golang/mock/gomock"
-	session "github.com/r-erema/wapi/internal/model/session"
 	reflect "reflect"
 	time "time"
+
+	gomock "github.com/golang/mock/gomock"
+	"github.com/r-erema/wapi/internal/model"
 )
 
 // MockMessageRepository is a mock of MessageRepository interface
@@ -87,10 +88,10 @@ func (m *MockSessionRepository) EXPECT() *MockSessionRepositoryMockRecorder {
 }
 
 // ReadSession mocks base method
-func (m *MockSessionRepository) ReadSession(sessionID string) (*session.WapiSession, error) {
+func (m *MockSessionRepository) ReadSession(sessionID string) (*model.WapiSession, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReadSession", sessionID)
-	ret0, _ := ret[0].(*session.WapiSession)
+	ret0, _ := ret[0].(*model.WapiSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -102,7 +103,7 @@ func (mr *MockSessionRepositoryMockRecorder) ReadSession(sessionID interface{}) 
 }
 
 // WriteSession mocks base method
-func (m *MockSessionRepository) WriteSession(session *session.WapiSession) error {
+func (m *MockSessionRepository) WriteSession(session *model.WapiSession) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WriteSession", session)
 	ret0, _ := ret[0].(error)

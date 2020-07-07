@@ -7,21 +7,20 @@ import (
 	"sync"
 
 	"github.com/r-erema/wapi/internal/repository"
-	"github.com/r-erema/wapi/internal/service/auth"
-	"github.com/r-erema/wapi/internal/service/message"
+	"github.com/r-erema/wapi/internal/service"
 )
 
 // RegisterSessionHandler responsible for creation of new session.
 type RegisterSessionHandler struct {
-	auth         auth.Authorizer
-	listener     message.Listener
+	auth         service.Authorizer
+	listener     service.Listener
 	sessionWorks repository.SessionRepository
 }
 
 // NewRegisterSessionHandler creates RegisterSessionHandler.
 func NewRegisterSessionHandler(
-	authorizer auth.Authorizer,
-	l message.Listener,
+	authorizer service.Authorizer,
+	l service.Listener,
 	sessRepo repository.SessionRepository,
 ) *RegisterSessionHandler {
 	return &RegisterSessionHandler{auth: authorizer, listener: l, sessionWorks: sessRepo}

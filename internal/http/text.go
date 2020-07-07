@@ -5,20 +5,18 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/r-erema/wapi/internal/service/auth"
-	"github.com/r-erema/wapi/internal/service/supervisor"
-
 	"github.com/Rhymen/go-whatsapp"
+	"github.com/r-erema/wapi/internal/service"
 )
 
 // SendTextMessageHandler responsible for sending text messages.
 type SendTextMessageHandler struct {
-	auth                  auth.Authorizer
-	connectionsSupervisor supervisor.Connections
+	auth                  service.Authorizer
+	connectionsSupervisor service.Connections
 }
 
 // NewTextHandler creates SendTextMessageHandler.
-func NewTextHandler(authorizer auth.Authorizer, connectionsSupervisor supervisor.Connections) *SendTextMessageHandler {
+func NewTextHandler(authorizer service.Authorizer, connectionsSupervisor service.Connections) *SendTextMessageHandler {
 	return &SendTextMessageHandler{auth: authorizer, connectionsSupervisor: connectionsSupervisor}
 }
 
