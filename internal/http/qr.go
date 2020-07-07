@@ -5,35 +5,36 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/r-erema/wapi/internal/infrastructure/os"
 	"github.com/r-erema/wapi/internal/service"
 )
 
 // ImageHandler returns QR image.
 type ImageHandler struct {
+	fs             os.FileSystem
 	qrFileResolver service.QRFileResolver
 }
 
 // NewInfo creates ImageHandler.
-func NewQR(qrFileResolver service.QRFileResolver) *ImageHandler {
-	return &ImageHandler{qrFileResolver: qrFileResolver}
+func NewQR(fs os.FileSystem, qrFileResolver service.QRFileResolver) *ImageHandler {
+	return &ImageHandler{fs: fs, qrFileResolver: qrFileResolver}
 }
 
-func (handler *ImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *ImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	sessionID := params["sessionID"]
-	qrImagePath := handler.qrFileResolver.ResolveQrFilePath(sessionID)
-	if _, err := os.Stat(qrImagePath); os.IsNotExist(err) {
+	qrImagePath := h.qrFileResolver.ResolveQrFilePath(sessionID)
+	if _, err := h.fs.Stat(qrImagePath); h.fs.IsNotExist(err) {
 		errPrefix := "QR image not found"
 		http.Error(w, errPrefix, http.StatusNotFound)
 		log.Printf("%s: %v", errPrefix, err)
 		return
 	}
 
-	f, err := os.Open(qrImagePath)
+	f, err := h.fs.Open(qrImagePath)
 	if err != nil {
 		errPrefix := "can't open qr image file"
 		http.Error(w, errPrefix, http.StatusInternalServerError)

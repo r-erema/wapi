@@ -5,11 +5,10 @@
 package mock
 
 import (
-	reflect "reflect"
-
 	gomock "github.com/golang/mock/gomock"
 	whatsapp "github.com/r-erema/wapi/internal/infrastructure/whatsapp"
-	"github.com/r-erema/wapi/internal/model"
+	model "github.com/r-erema/wapi/internal/model"
+	reflect "reflect"
 )
 
 // MockAuthorizer is a mock of Authorizer interface

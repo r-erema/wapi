@@ -5,11 +5,10 @@
 package mock
 
 import (
+	gomock "github.com/golang/mock/gomock"
+	model "github.com/r-erema/wapi/internal/model"
 	reflect "reflect"
 	time "time"
-
-	gomock "github.com/golang/mock/gomock"
-	"github.com/r-erema/wapi/internal/model"
 )
 
 // MockMessageRepository is a mock of MessageRepository interface

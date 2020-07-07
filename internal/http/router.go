@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/r-erema/wapi/internal/config"
 	jsonInfra "github.com/r-erema/wapi/internal/infrastructure/json"
+	"github.com/r-erema/wapi/internal/infrastructure/os"
 	"github.com/r-erema/wapi/internal/repository"
 	"github.com/r-erema/wapi/internal/service"
 )
@@ -22,6 +23,7 @@ func Router(
 	authorizer service.Authorizer,
 	qrFileResolver service.QRFileResolver,
 	listener service.Listener,
+	fs os.FileSystem,
 ) *mux.Router {
 	if conf.Env == config.DevMode {
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{
@@ -37,7 +39,7 @@ func Router(
 	marshal := jsonInfra.MarshallCallback(json.Marshal)
 	sendMessageHandler := NewTextHandler(authorizer, connSupervisor, &marshal)
 	sendImageHandler := NewImageHandler(authorizer, connSupervisor, &http.Client{}, &marshal)
-	getQRImageHandler := NewQR(qrFileResolver)
+	getQRImageHandler := NewQR(fs, qrFileResolver)
 	getSessionInfoHandler := NewSessInfoHandler(sessRepo)
 	getActiveConnectionInfoHandler := NewInfo(connSupervisor)
 

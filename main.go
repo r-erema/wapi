@@ -10,6 +10,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/r-erema/wapi/internal/config"
 	httpInternal "github.com/r-erema/wapi/internal/http"
+	osInfra "github.com/r-erema/wapi/internal/infrastructure/os"
 	"github.com/r-erema/wapi/internal/repository"
 	messageRepo "github.com/r-erema/wapi/internal/repository/message"
 	sessionRepo "github.com/r-erema/wapi/internal/repository/session"
@@ -24,14 +25,16 @@ func main() {
 
 	initSentry(conf)
 
+	fs := &osInfra.FS{}
+
 	msgRepo := msgRepo(conf)
 	sessRepo := sessRepo(conf)
 	connSupervisor := connSupervisor(conf)
-	resolver := qrFileResolver(conf)
+	resolver := qrFileResolver(conf, fs)
 	authorizer := authorizer(conf, sessRepo, connSupervisor, resolver)
 	listener := service.NewWebHook(sessRepo, connSupervisor, authorizer, conf.WebHookURL, msgRepo, &http.Client{})
 
-	router := httpInternal.Router(conf, sessRepo, connSupervisor, authorizer, resolver, listener)
+	router := httpInternal.Router(conf, sessRepo, connSupervisor, authorizer, resolver, listener, fs)
 
 	certFileExists, certKeyExists := true, true
 	if _, err = os.Stat(conf.CertFilePath); os.IsNotExist(err) {
@@ -73,8 +76,8 @@ func connSupervisor(conf *config.Config) service.Connections {
 	return service.NewSV(time.Duration(conf.ConnectionsCheckoutDuration))
 }
 
-func qrFileResolver(conf *config.Config) service.QRFileResolver {
-	qrFileResolver, err := service.NewQRImgResolver(conf.FileSystemRootPath + "/qr-codes")
+func qrFileResolver(conf *config.Config, fs osInfra.FileSystem) service.QRFileResolver {
+	qrFileResolver, err := service.NewQRImgResolver(conf.FileSystemRootPath+"/qr-codes", fs)
 	if err != nil {
 		log.Fatalf("can't create service `QR file resolver`: %v\n", err)
 	}

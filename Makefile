@@ -17,12 +17,14 @@ tidy:
 
 # https://github.com/golang/mock
 gen-mock:
+	mockgen -package="mock" -source=internal/infrastructure/http/client.go -destination=internal/testutil/mock/client.go
+	mockgen -package="mock" -source=internal/infrastructure/os/fs.go -destination=internal/testutil/mock/fs.go
+	mockgen -package="mock" -source=internal/infrastructure/whatsapp/conn.go -destination=internal/testutil/mock/conn.go
+	mockgen -package="mock" -source=internal/repository/repository.go -destination=internal/testutil/mock/repository.go
 	mockgen -package="mock" -source=internal/service/auth.go -destination=internal/testutil/mock/auth.go
 	mockgen -package="mock" -source=internal/service/listener.go -destination=internal/testutil/mock/listener.go
-	mockgen -package="mock" -source=internal/repository/repository.go -destination=internal/testutil/mock/repository.go
+	mockgen -package="mock" -source=internal/service/resolver.go -destination=internal/testutil/mock/resolver.go
 	mockgen -package="mock" -source=internal/service/supervisor.go -destination=internal/testutil/mock/connection.go
-	mockgen -package="mock" -source=internal/infrastructure/http/client.go -destination=internal/testutil/mock/client.go
-	mockgen -package="mock" -source=internal/infrastructure/whatsapp/conn.go -destination=internal/testutil/mock/conn.go
 
 lint:
 ifeq ("$(wildcard $(GOLANGCI_LINT_PATH))","")
