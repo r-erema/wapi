@@ -6,11 +6,14 @@ GOLANGCI_LINT_PATH := $(shell go env GOPATH)/bin/golangci-lint-versions/$(GOLANG
 deploy: build
 	docker push erema/wapi:0.1
 
-build:
+build: tidy
 	docker build . -t erema/wapi:0.1
 
 run:
 	docker run --env-file .env erema/wapi:0.1
+
+tidy:
+	go mod tidy
 
 # https://github.com/golang/mock
 gen-mock:
