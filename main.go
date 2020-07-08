@@ -6,8 +6,6 @@ import (
 	"os"
 	"time"
 
-	_ "github.com/Rhymen/go-whatsapp"
-	"github.com/getsentry/sentry-go"
 	"github.com/r-erema/wapi/internal/config"
 	httpInternal "github.com/r-erema/wapi/internal/http"
 	osInfra "github.com/r-erema/wapi/internal/infrastructure/os"
@@ -15,6 +13,9 @@ import (
 	messageRepo "github.com/r-erema/wapi/internal/repository/message"
 	sessionRepo "github.com/r-erema/wapi/internal/repository/session"
 	"github.com/r-erema/wapi/internal/service"
+
+	_ "github.com/Rhymen/go-whatsapp"
+	"github.com/getsentry/sentry-go"
 )
 
 func main() {
@@ -93,11 +94,13 @@ func authorizer(
 	connSupervisor service.Connections,
 	resolver service.QRFileResolver,
 ) service.Authorizer {
-	authorizer := service.New(
+	authorizer := service.NewAuth(
 		time.Duration(conf.ConnectionTimeout)*time.Second,
 		sessRepo,
 		connSupervisor,
 		resolver,
+		service.RhymenConnector{},
+		make(chan string),
 	)
 	return authorizer
 }

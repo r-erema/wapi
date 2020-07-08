@@ -6,6 +6,9 @@ import (
 	"github.com/Rhymen/go-whatsapp"
 )
 
+// ErrMsg401 should emerge if login failed because of 401 response.
+const ErrMsg401 = "admin login responded with 401"
+
 // Conn is an object of connection with Whatsapp server.
 type Conn interface {
 	// Send sends messages to WhatsApp server.
