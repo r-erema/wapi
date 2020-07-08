@@ -2,24 +2,25 @@ package http
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"os"
 
-	"github.com/gorilla/mux"
 	"github.com/r-erema/wapi/internal/repository"
+
+	"github.com/gorilla/mux"
 )
 
 // SessInfoHandler provides info about session.
 type SessInfoHandler struct {
-	sessionRepo repository.SessionRepository
+	sessionRepo repository.Session
 }
 
 // NewSessInfoHandler creates SessInfoHandler.
-func NewSessInfoHandler(sessionWork repository.SessionRepository) *SessInfoHandler {
+func NewSessInfoHandler(sessionWork repository.Session) *SessInfoHandler {
 	return &SessInfoHandler{sessionRepo: sessionWork}
 }
 
+// ServeHTTP sends session info.
 func (handler *SessInfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	sessionID := params["sessionID"]
@@ -28,9 +29,7 @@ func (handler *SessInfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		if _, ok := err.(*os.PathError); ok {
 			http.Error(w, "session not found", http.StatusNotFound)
 		} else {
-			errPrefix := "can't read session"
-			http.Error(w, errPrefix, http.StatusInternalServerError)
-			log.Printf("%s: %v", errPrefix, err)
+			handleError(w, "can't read session", err, http.StatusInternalServerError)
 		}
 		return
 	}
@@ -38,9 +37,7 @@ func (handler *SessInfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(session)
 	if err != nil {
-		errPrefix := "can't encode session"
-		http.Error(w, errPrefix, http.StatusInternalServerError)
-		log.Printf("%s: %v", errPrefix, err)
+		handleError(w, "can't encode session", err, http.StatusInternalServerError)
 		return
 	}
 }

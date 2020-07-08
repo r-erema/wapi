@@ -11,31 +11,31 @@ import (
 	time "time"
 )
 
-// MockMessageRepository is a mock of MessageRepository interface
-type MockMessageRepository struct {
+// MockMessage is a mock of Message interface
+type MockMessage struct {
 	ctrl     *gomock.Controller
-	recorder *MockMessageRepositoryMockRecorder
+	recorder *MockMessageMockRecorder
 }
 
-// MockMessageRepositoryMockRecorder is the mock recorder for MockMessageRepository
-type MockMessageRepositoryMockRecorder struct {
-	mock *MockMessageRepository
+// MockMessageMockRecorder is the mock recorder for MockMessage
+type MockMessageMockRecorder struct {
+	mock *MockMessage
 }
 
-// NewMockMessageRepository creates a new mock instance
-func NewMockMessageRepository(ctrl *gomock.Controller) *MockMessageRepository {
-	mock := &MockMessageRepository{ctrl: ctrl}
-	mock.recorder = &MockMessageRepositoryMockRecorder{mock}
+// NewMockMessage creates a new mock instance
+func NewMockMessage(ctrl *gomock.Controller) *MockMessage {
+	mock := &MockMessage{ctrl: ctrl}
+	mock.recorder = &MockMessageMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use
-func (m *MockMessageRepository) EXPECT() *MockMessageRepositoryMockRecorder {
+func (m *MockMessage) EXPECT() *MockMessageMockRecorder {
 	return m.recorder
 }
 
 // SaveMessageTime mocks base method
-func (m *MockMessageRepository) SaveMessageTime(msgID string, time time.Time) error {
+func (m *MockMessage) SaveMessageTime(msgID string, time time.Time) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveMessageTime", msgID, time)
 	ret0, _ := ret[0].(error)
@@ -43,13 +43,13 @@ func (m *MockMessageRepository) SaveMessageTime(msgID string, time time.Time) er
 }
 
 // SaveMessageTime indicates an expected call of SaveMessageTime
-func (mr *MockMessageRepositoryMockRecorder) SaveMessageTime(msgID, time interface{}) *gomock.Call {
+func (mr *MockMessageMockRecorder) SaveMessageTime(msgID, time interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveMessageTime", reflect.TypeOf((*MockMessageRepository)(nil).SaveMessageTime), msgID, time)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveMessageTime", reflect.TypeOf((*MockMessage)(nil).SaveMessageTime), msgID, time)
 }
 
 // MessageTime mocks base method
-func (m *MockMessageRepository) MessageTime(msgID string) (*time.Time, error) {
+func (m *MockMessage) MessageTime(msgID string) (*time.Time, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MessageTime", msgID)
 	ret0, _ := ret[0].(*time.Time)
@@ -58,36 +58,36 @@ func (m *MockMessageRepository) MessageTime(msgID string) (*time.Time, error) {
 }
 
 // MessageTime indicates an expected call of MessageTime
-func (mr *MockMessageRepositoryMockRecorder) MessageTime(msgID interface{}) *gomock.Call {
+func (mr *MockMessageMockRecorder) MessageTime(msgID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MessageTime", reflect.TypeOf((*MockMessageRepository)(nil).MessageTime), msgID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MessageTime", reflect.TypeOf((*MockMessage)(nil).MessageTime), msgID)
 }
 
-// MockSessionRepository is a mock of SessionRepository interface
-type MockSessionRepository struct {
+// MockSession is a mock of Session interface
+type MockSession struct {
 	ctrl     *gomock.Controller
-	recorder *MockSessionRepositoryMockRecorder
+	recorder *MockSessionMockRecorder
 }
 
-// MockSessionRepositoryMockRecorder is the mock recorder for MockSessionRepository
-type MockSessionRepositoryMockRecorder struct {
-	mock *MockSessionRepository
+// MockSessionMockRecorder is the mock recorder for MockSession
+type MockSessionMockRecorder struct {
+	mock *MockSession
 }
 
-// NewMockSessionRepository creates a new mock instance
-func NewMockSessionRepository(ctrl *gomock.Controller) *MockSessionRepository {
-	mock := &MockSessionRepository{ctrl: ctrl}
-	mock.recorder = &MockSessionRepositoryMockRecorder{mock}
+// NewMockSession creates a new mock instance
+func NewMockSession(ctrl *gomock.Controller) *MockSession {
+	mock := &MockSession{ctrl: ctrl}
+	mock.recorder = &MockSessionMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use
-func (m *MockSessionRepository) EXPECT() *MockSessionRepositoryMockRecorder {
+func (m *MockSession) EXPECT() *MockSessionMockRecorder {
 	return m.recorder
 }
 
 // ReadSession mocks base method
-func (m *MockSessionRepository) ReadSession(sessionID string) (*model.WapiSession, error) {
+func (m *MockSession) ReadSession(sessionID string) (*model.WapiSession, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReadSession", sessionID)
 	ret0, _ := ret[0].(*model.WapiSession)
@@ -96,13 +96,13 @@ func (m *MockSessionRepository) ReadSession(sessionID string) (*model.WapiSessio
 }
 
 // ReadSession indicates an expected call of ReadSession
-func (mr *MockSessionRepositoryMockRecorder) ReadSession(sessionID interface{}) *gomock.Call {
+func (mr *MockSessionMockRecorder) ReadSession(sessionID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadSession", reflect.TypeOf((*MockSessionRepository)(nil).ReadSession), sessionID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadSession", reflect.TypeOf((*MockSession)(nil).ReadSession), sessionID)
 }
 
 // WriteSession mocks base method
-func (m *MockSessionRepository) WriteSession(session *model.WapiSession) error {
+func (m *MockSession) WriteSession(session *model.WapiSession) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WriteSession", session)
 	ret0, _ := ret[0].(error)
@@ -110,13 +110,13 @@ func (m *MockSessionRepository) WriteSession(session *model.WapiSession) error {
 }
 
 // WriteSession indicates an expected call of WriteSession
-func (mr *MockSessionRepositoryMockRecorder) WriteSession(session interface{}) *gomock.Call {
+func (mr *MockSessionMockRecorder) WriteSession(session interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteSession", reflect.TypeOf((*MockSessionRepository)(nil).WriteSession), session)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteSession", reflect.TypeOf((*MockSession)(nil).WriteSession), session)
 }
 
 // AllSavedSessionIds mocks base method
-func (m *MockSessionRepository) AllSavedSessionIds() ([]string, error) {
+func (m *MockSession) AllSavedSessionIds() ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AllSavedSessionIds")
 	ret0, _ := ret[0].([]string)
@@ -125,13 +125,13 @@ func (m *MockSessionRepository) AllSavedSessionIds() ([]string, error) {
 }
 
 // AllSavedSessionIds indicates an expected call of AllSavedSessionIds
-func (mr *MockSessionRepositoryMockRecorder) AllSavedSessionIds() *gomock.Call {
+func (mr *MockSessionMockRecorder) AllSavedSessionIds() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AllSavedSessionIds", reflect.TypeOf((*MockSessionRepository)(nil).AllSavedSessionIds))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AllSavedSessionIds", reflect.TypeOf((*MockSession)(nil).AllSavedSessionIds))
 }
 
 // RemoveSession mocks base method
-func (m *MockSessionRepository) RemoveSession(sessionID string) error {
+func (m *MockSession) RemoveSession(sessionID string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemoveSession", sessionID)
 	ret0, _ := ret[0].(error)
@@ -139,7 +139,7 @@ func (m *MockSessionRepository) RemoveSession(sessionID string) error {
 }
 
 // RemoveSession indicates an expected call of RemoveSession
-func (mr *MockSessionRepositoryMockRecorder) RemoveSession(sessionID interface{}) *gomock.Call {
+func (mr *MockSessionMockRecorder) RemoveSession(sessionID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveSession", reflect.TypeOf((*MockSessionRepository)(nil).RemoveSession), sessionID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveSession", reflect.TypeOf((*MockSession)(nil).RemoveSession), sessionID)
 }

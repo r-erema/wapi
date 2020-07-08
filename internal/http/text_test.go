@@ -13,12 +13,12 @@ import (
 	"github.com/r-erema/wapi/internal/service"
 	httpTest "github.com/r-erema/wapi/internal/testutil/http"
 	"github.com/r-erema/wapi/internal/testutil/mock"
-	"github.com/stretchr/testify/require"
 
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/gavv/httpexpect"
 	"github.com/golang/mock/gomock"
 	"github.com/magiconair/properties/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewTextHandler(t *testing.T) {

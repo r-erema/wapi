@@ -98,7 +98,7 @@ func badImageURL() testData {
 			return authorizer, connections, httpClient, marshal
 		},
 		imageRequest,
-		http.StatusBadRequest,
+		http.StatusInternalServerError,
 	}
 }
 
@@ -115,7 +115,7 @@ func cantReadImageBody() testData {
 			return authorizer, connections, httpClient, marshal
 		},
 		imageRequest,
-		http.StatusBadRequest,
+		http.StatusInternalServerError,
 	}
 }
 

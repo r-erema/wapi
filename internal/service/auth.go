@@ -6,24 +6,25 @@ import (
 	"os"
 	"time"
 
-	qrCode "github.com/Baozisoftware/qrcode-terminal-go"
-	whatsappRhymen "github.com/Rhymen/go-whatsapp"
 	"github.com/r-erema/wapi/internal/infrastructure/whatsapp"
 	"github.com/r-erema/wapi/internal/model"
 	"github.com/r-erema/wapi/internal/repository"
+
+	qrCode "github.com/Baozisoftware/qrcode-terminal-go"
+	whatsappRhymen "github.com/Rhymen/go-whatsapp"
 	"github.com/skip2/go-qrcode"
 )
 
-// Authorizer responsible for users authorization.
+// Authorizer is responsible for users authorization.
 type Authorizer interface {
-	// Authorizes user whether by stored session file or by qr-code.
+	// Login authorizes user whether by stored session file or by qr-code.
 	Login(sessionID string) (whatsapp.Conn, *model.WapiSession, error)
 }
 
-// Auth responsible for users authorization using qr-code or stored session.
+// Auth is responsible for users authorization using qr-code or stored session.
 type Auth struct {
 	timeoutConnection     time.Duration
-	SessionWorks          repository.SessionRepository
+	SessionWorks          repository.Session
 	connectionsSupervisor Connections
 	fileResolver          QRFileResolver
 }
@@ -31,7 +32,7 @@ type Auth struct {
 // New creates Auth service.
 func New(
 	timeoutConnection time.Duration,
-	sessionWorks repository.SessionRepository,
+	sessionWorks repository.Session,
 	connectionsSupervisor Connections,
 	fileResolver QRFileResolver,
 ) *Auth {
@@ -43,7 +44,7 @@ func New(
 	}
 }
 
-// Authorizes user whether by stored session file or by qr-code.
+// Login authorizes user whether by stored session file or by qr-code.
 func (auth *Auth) Login(sessionID string) (whatsapp.Conn, *model.WapiSession, error) {
 	wac, err := whatsapp.NewRhymenConn(auth.timeoutConnection)
 	if err != nil {
@@ -52,8 +53,7 @@ func (auth *Auth) Login(sessionID string) (whatsapp.Conn, *model.WapiSession, er
 
 	wapiSession, err := auth.SessionWorks.ReadSession(sessionID)
 	if err == nil {
-		_, err = wac.RestoreWithSession(wapiSession.WhatsAppSession)
-		if err != nil {
+		if _, err = wac.RestoreWithSession(wapiSession.WhatsAppSession); err != nil {
 			removeSessionFileTxt := ""
 			if err.Error() == "admin login responded with 401" {
 				_ = auth.SessionWorks.RemoveSession(wapiSession.SessionID)

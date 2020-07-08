@@ -34,7 +34,10 @@ func main() {
 	authorizer := authorizer(conf, sessRepo, connSupervisor, resolver)
 	listener := service.NewWebHook(sessRepo, connSupervisor, authorizer, conf.WebHookURL, msgRepo, &http.Client{})
 
-	router := httpInternal.Router(conf, sessRepo, connSupervisor, authorizer, resolver, listener, fs)
+	router, err := httpInternal.Router(conf, sessRepo, connSupervisor, authorizer, resolver, listener, fs)
+	if err != nil {
+		log.Fatalf("init router error: %s", err)
+	}
 
 	certFileExists, certKeyExists := true, true
 	if _, err = os.Stat(conf.CertFilePath); os.IsNotExist(err) {
@@ -54,7 +57,7 @@ func main() {
 	log.Fatal(err)
 }
 
-func msgRepo(conf *config.Config) repository.MessageRepository {
+func msgRepo(conf *config.Config) repository.Message {
 	log.Print("connecting to redis...")
 	msgRepo, err := messageRepo.NewRedis(conf.RedisHost)
 	if err != nil {
@@ -64,7 +67,7 @@ func msgRepo(conf *config.Config) repository.MessageRepository {
 	return msgRepo
 }
 
-func sessRepo(conf *config.Config) repository.SessionRepository {
+func sessRepo(conf *config.Config) repository.Session {
 	sessRepo, err := sessionRepo.NewFileSystem(conf.FileSystemRootPath + "/sessions")
 	if err != nil {
 		log.Fatalf("can't create service `session`: %v\n", err)
@@ -86,7 +89,7 @@ func qrFileResolver(conf *config.Config, fs osInfra.FileSystem) service.QRFileRe
 
 func authorizer(
 	conf *config.Config,
-	sessRepo repository.SessionRepository,
+	sessRepo repository.Session,
 	connSupervisor service.Connections,
 	resolver service.QRFileResolver,
 ) service.Authorizer {

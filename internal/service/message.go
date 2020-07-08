@@ -8,24 +8,25 @@ import (
 	"log"
 	"time"
 
-	"github.com/Rhymen/go-whatsapp"
-	"github.com/getsentry/sentry-go"
 	httpInfra "github.com/r-erema/wapi/internal/infrastructure/http"
 	infrastructureWhatsapp "github.com/r-erema/wapi/internal/infrastructure/whatsapp"
 	"github.com/r-erema/wapi/internal/model"
 	"github.com/r-erema/wapi/internal/repository"
+
+	"github.com/Rhymen/go-whatsapp"
+	"github.com/getsentry/sentry-go"
 )
 
 // Sentry flush timout
 const SentryFlushTimeoutSeconds = 5
 
-// Handler responsible handle incoming messages and errors.
+// Handler is responsible handle incoming messages and errors.
 type Handler struct {
 	Connection            infrastructureWhatsapp.Conn
 	Session               *model.WapiSession
-	messageRepo           repository.MessageRepository
+	messageRepo           repository.Message
 	connectionsSupervisor Connections
-	storedSession         repository.SessionRepository
+	storedSession         repository.Session
 	client                httpInfra.Client
 	InitTimestamp         uint64
 	WebhookURL            string
@@ -35,9 +36,9 @@ type Handler struct {
 func NewHandler(
 	connection infrastructureWhatsapp.Conn,
 	wapiSession *model.WapiSession,
-	messageRepo repository.MessageRepository,
+	messageRepo repository.Message,
 	connectionsSupervisor Connections,
-	sessionRepo repository.SessionRepository,
+	sessionRepo repository.Session,
 	client httpInfra.Client,
 	initTimestamp uint64,
 	webhookURL string,
@@ -76,8 +77,7 @@ func (h *Handler) HandleError(err error) {
 		log.Printf("waiting %d sec...\n", interval)
 		<-time.After(interval * time.Second)
 		log.Println("reconnecting...")
-		_, err = h.Connection.RestoreWithSession(h.Session.WhatsAppSession)
-		if err != nil {
+		if _, err = h.Connection.RestoreWithSession(h.Session.WhatsAppSession); err != nil {
 			log.Printf("restore failed, session `%v`: %v", h.Session.SessionID, err)
 			sentry.CaptureException(fmt.Errorf(
 				"couldn't restore connection for session `%s`, login: `%s`: %v",
@@ -145,9 +145,7 @@ func (h *Handler) HandleTextMessage(msg *whatsapp.TextMessage) {
 	defer func() {
 		_ = resp.Body.Close()
 	}()
-	_, err = ioutil.ReadAll(resp.Body)
-
-	if err != nil {
+	if _, err = ioutil.ReadAll(resp.Body); err != nil {
 		fmt.Println("error happened reading the body", err)
 		return
 	}

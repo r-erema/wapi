@@ -19,7 +19,7 @@ func TestHandlerHTTPRequests(t *testing.T) {
 	tests := []struct {
 		name         string
 		data         interface{}
-		mocksFactory func(t *testing.T) (*mock.MockAuthorizer, *mock.MockListener, *mock.MockSessionRepository)
+		mocksFactory func(t *testing.T) (*mock.MockAuthorizer, *mock.MockListener, *mock.MockSession)
 		expectStatus int
 	}{
 		{
@@ -43,7 +43,7 @@ func TestHandlerHTTPRequests(t *testing.T) {
 		{
 			"Listener error",
 			map[string]string{"session_id": "session_id_token_81E25FCF8393C916D131A81C60AFFEB11"},
-			func(t *testing.T) (*mock.MockAuthorizer, *mock.MockListener, *mock.MockSessionRepository) {
+			func(t *testing.T) (*mock.MockAuthorizer, *mock.MockListener, *mock.MockSession) {
 				mockCtrl := gomock.NewController(t)
 				listener := mock.NewMockListener(mockCtrl)
 				listener.EXPECT().
@@ -80,7 +80,7 @@ func TestHandlerHTTPRequests(t *testing.T) {
 func TestFailRestoreSessions(t *testing.T) {
 	auth, listener, _ := prepareMocks(t)
 	mockCtrl := gomock.NewController(t)
-	sessionRepo := mock.NewMockSessionRepository(mockCtrl)
+	sessionRepo := mock.NewMockSession(mockCtrl)
 	sessionRepo.EXPECT().AllSavedSessionIds().DoAndReturn(func() ([]string, error) {
 		return nil, fmt.Errorf("something went wrong... ")
 	})
@@ -92,7 +92,7 @@ func TestFailRestoreSessions(t *testing.T) {
 func TestSuccessRestoreSessions(t *testing.T) {
 	auth, _, _ := prepareMocks(t)
 	mockCtrl := gomock.NewController(t)
-	sessionRepo := mock.NewMockSessionRepository(mockCtrl)
+	sessionRepo := mock.NewMockSession(mockCtrl)
 	sessionRepo.EXPECT().AllSavedSessionIds().DoAndReturn(func() ([]string, error) {
 		return []string{
 			"sess_id_1",
@@ -119,7 +119,7 @@ func TestSuccessRestoreSessions(t *testing.T) {
 func TestSkipFailedListenerOnRestoringSessions(t *testing.T) {
 	auth, _, _ := prepareMocks(t)
 	mockCtrl := gomock.NewController(t)
-	sessionRepo := mock.NewMockSessionRepository(mockCtrl)
+	sessionRepo := mock.NewMockSession(mockCtrl)
 	sessionRepo.EXPECT().AllSavedSessionIds().DoAndReturn(func() ([]string, error) {
 		return []string{"sess_id_1"}, nil
 	})
@@ -142,7 +142,7 @@ func TestSkipFailedListenerOnRestoringSessions(t *testing.T) {
 func prepareMocks(t *testing.T) (
 	auth *mock.MockAuthorizer,
 	listener *mock.MockListener,
-	sessionRepo *mock.MockSessionRepository,
+	sessionRepo *mock.MockSession,
 ) {
 	sessionID := "session_id_token_81E25FCF8393C916D131A81C60AFFEB11"
 	mockCtrl := gomock.NewController(t)
@@ -154,6 +154,6 @@ func prepareMocks(t *testing.T) (
 	listener.EXPECT().
 		ListenForSession(gomock.Any(), gomock.Any()).
 		Do(func(sessionID string, wg *sync.WaitGroup) { wg.Done() })
-	sessionRepo = mock.NewMockSessionRepository(mockCtrl)
+	sessionRepo = mock.NewMockSession(mockCtrl)
 	return
 }

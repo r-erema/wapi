@@ -5,12 +5,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Rhymen/go-whatsapp"
 	"github.com/r-erema/wapi/internal/model"
 	"github.com/r-erema/wapi/internal/service"
 	httpTest "github.com/r-erema/wapi/internal/testutil/http"
 	"github.com/r-erema/wapi/internal/testutil/mock"
 
+	"github.com/Rhymen/go-whatsapp"
 	"github.com/gavv/httpexpect"
 	"github.com/golang/mock/gomock"
 	"github.com/magiconair/properties/assert"

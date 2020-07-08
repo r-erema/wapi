@@ -10,22 +10,23 @@ import (
 	"github.com/r-erema/wapi/internal/service"
 )
 
-// RegisterSessionHandler responsible for creation of new session.
+// RegisterSessionHandler is responsible for creation of new session.
 type RegisterSessionHandler struct {
 	auth         service.Authorizer
 	listener     service.Listener
-	sessionWorks repository.SessionRepository
+	sessionWorks repository.Session
 }
 
 // NewRegisterSessionHandler creates RegisterSessionHandler.
 func NewRegisterSessionHandler(
 	authorizer service.Authorizer,
 	l service.Listener,
-	sessRepo repository.SessionRepository,
+	sessRepo repository.Session,
 ) *RegisterSessionHandler {
 	return &RegisterSessionHandler{auth: authorizer, listener: l, sessionWorks: sessRepo}
 }
 
+// ServeHTTP registers session and starts listening incoming messages.
 func (handler *RegisterSessionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var registerSession RegisterSessionRequest
@@ -55,8 +56,7 @@ func (handler *RegisterSessionHandler) startListenIncomingMessages(sessionID str
 	wg.Add(1)
 	errChan := make(chan error)
 	go func(sid string) {
-		_, err := handler.listener.ListenForSession(sid, &wg)
-		if err != nil {
+		if _, err := handler.listener.ListenForSession(sid, &wg); err != nil {
 			errChan <- err
 		}
 	}(sessionID)

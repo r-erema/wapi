@@ -11,7 +11,7 @@ import (
 	"github.com/Rhymen/go-whatsapp"
 )
 
-// SendTextMessageHandler responsible for sending text messages.
+// SendTextMessageHandler is responsible for sending text messages.
 type SendTextMessageHandler struct {
 	auth                  service.Authorizer
 	connectionsSupervisor service.Connections
@@ -27,22 +27,19 @@ func NewTextHandler(
 	return &SendTextMessageHandler{auth: authorizer, connectionsSupervisor: connectionsSupervisor, marshal: marshal}
 }
 
+// ServeHTTP sends text message to WhatsApp server.
 func (handler *SendTextMessageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var msgReq SendMessageRequest
 	err := decoder.Decode(&msgReq)
 	if err != nil {
-		errorPrefix := "can't decode request"
-		http.Error(w, errorPrefix, http.StatusBadRequest)
-		log.Printf("%s: %v\n", errorPrefix, err)
+		handleError(w, "can't decode request", err, http.StatusBadRequest)
 		return
 	}
 
 	sessConnDTO, err := handler.connectionsSupervisor.AuthenticatedConnectionForSession(msgReq.SessionID)
 	if err != nil {
-		errorPrefix := "session not registered"
-		http.Error(w, errorPrefix, http.StatusBadRequest)
-		log.Printf("%s: %v\n", errorPrefix, err)
+		handleError(w, "session not registered", err, http.StatusBadRequest)
 		return
 	}
 	wac := sessConnDTO.Wac()
@@ -55,27 +52,19 @@ func (handler *SendTextMessageHandler) ServeHTTP(w http.ResponseWriter, r *http.
 		Text: msgReq.Text,
 	}
 
-	_, err = wac.Send(message)
-	if err != nil {
-		errorPrefix := "sending message error"
-		http.Error(w, errorPrefix, http.StatusInternalServerError)
-		log.Printf("%s: %v\n", errorPrefix, err)
+	if _, err = wac.Send(message); err != nil {
+		handleError(w, "sending message error", err, http.StatusInternalServerError)
 	}
 	log.Printf("message sent to %s by session %s \n", msgReq.ChatID, msgReq.SessionID)
 	marshal := *handler.marshal
 	responseBody, err := marshal(&message)
 	if err != nil {
-		errorPrefix := "error message marshaling"
-		http.Error(w, errorPrefix, http.StatusInternalServerError)
-		log.Printf("%s: %v\n", errorPrefix, err)
+		handleError(w, "error message marshaling", err, http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	_, err = w.Write(responseBody)
-	if err != nil {
-		errorPrefix := "can't write body to response"
-		http.Error(w, errorPrefix, http.StatusInternalServerError)
-		log.Printf("%s: %v\n", errorPrefix, err)
+	if _, err = w.Write(responseBody); err != nil {
+		handleError(w, "can't write body to response", err, http.StatusInternalServerError)
 		return
 	}
 }

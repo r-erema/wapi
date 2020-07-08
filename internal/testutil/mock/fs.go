@@ -79,7 +79,7 @@ func (mr *MockFileSystemMockRecorder) IsNotExist(err interface{}) *gomock.Call {
 }
 
 // MkdirAll mocks base method
-func (m *MockFileSystem) MkdirAll(path string, perm os0.FileMode) error {
+func (m *MockFileSystem) MkdirAll(path string, perm os.FileMode) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MkdirAll", path, perm)
 	ret0, _ := ret[0].(error)

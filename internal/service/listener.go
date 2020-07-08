@@ -20,21 +20,21 @@ type Listener interface {
 
 // WebHook listens for incoming messages and propagate them to webhook handler.
 type WebHook struct {
-	sessionWorks          repository.SessionRepository
+	sessionWorks          repository.Session
 	connectionsSupervisor Connections
 	auth                  Authorizer
 	webhookURL            string
-	msgRepo               repository.MessageRepository
+	msgRepo               repository.Message
 	client                httpInfra.Client
 }
 
 // NewWebHook creates listener for sending messages to webhook.
 func NewWebHook(
-	sessionWorks repository.SessionRepository,
+	sessionWorks repository.Session,
 	connectionsSupervisor Connections,
 	authorizer Authorizer,
 	webhookURL string,
-	msgRepo repository.MessageRepository,
+	msgRepo repository.Message,
 	client httpInfra.Client,
 ) *WebHook {
 	return &WebHook{
@@ -49,8 +49,7 @@ func NewWebHook(
 
 // Receives messages from WhatsApp server and propagates them to handlers.
 func (l *WebHook) ListenForSession(sessionID string, wg *sync.WaitGroup) (gracefulDone bool, err error) {
-	_, err = l.connectionsSupervisor.AuthenticatedConnectionForSession(sessionID)
-	if err == nil {
+	if _, err = l.connectionsSupervisor.AuthenticatedConnectionForSession(sessionID); err == nil {
 		log.Printf("Session `%s` is already listenning", sessionID)
 		return false, err
 	}
