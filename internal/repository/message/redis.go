@@ -16,8 +16,7 @@ type RedisRepository struct {
 // NewRedis creates redis repository.
 func NewRedis(host string) (*RedisRepository, error) {
 	redisClient := redis.NewClient(&redis.Options{Addr: host})
-	_, err := redisClient.Ping().Result()
-	if err != nil {
+	if _, err := redisClient.Ping().Result(); err != nil {
 		return nil, err
 	}
 	return &RedisRepository{client: redisClient, storeExpirationTime: time.Hour * 24 * 30}, nil
