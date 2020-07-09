@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/r-erema/wapi/internal/infrastructure/whatsapp"
 	"github.com/r-erema/wapi/internal/model"
 	"github.com/r-erema/wapi/internal/repository"
 
-	qrCode "github.com/Baozisoftware/qrcode-terminal-go"
+	terminal "github.com/Baozisoftware/qrcode-terminal-go"
 	whatsappRhymen "github.com/Rhymen/go-whatsapp"
 	"github.com/skip2/go-qrcode"
 )
@@ -24,56 +25,65 @@ type Authorizer interface {
 // Auth is responsible for users authorization using qr-code or stored session.
 type Auth struct {
 	timeoutConnection     time.Duration
-	SessionWorks          repository.Session
+	SessionRepo           repository.Session
 	connectionsSupervisor Connections
 	fileResolver          QRFileResolver
+	connector             Connector
+	qrDataChan            chan string
 }
 
-// New creates Auth service.
-func New(
+// NewAuth creates Auth service.
+func NewAuth(
 	timeoutConnection time.Duration,
-	sessionWorks repository.Session,
+	sessionRepo repository.Session,
 	connectionsSupervisor Connections,
 	fileResolver QRFileResolver,
+	connector Connector,
+	qrDataChan chan string,
 ) *Auth {
 	return &Auth{
 		timeoutConnection:     timeoutConnection,
-		SessionWorks:          sessionWorks,
+		SessionRepo:           sessionRepo,
 		connectionsSupervisor: connectionsSupervisor,
 		fileResolver:          fileResolver,
+		connector:             connector,
+		qrDataChan:            qrDataChan,
 	}
 }
 
 // Login authorizes user whether by stored session file or by qr-code.
 func (auth *Auth) Login(sessionID string) (whatsapp.Conn, *model.WapiSession, error) {
-	wac, err := whatsapp.NewRhymenConn(auth.timeoutConnection)
+	wac, err := auth.connector.Connect(auth.timeoutConnection)
 	if err != nil {
 		return nil, nil, fmt.Errorf("create connection failed for session `%s`: %v", sessionID, err)
 	}
 
-	wapiSession, err := auth.SessionWorks.ReadSession(sessionID)
+	wapiSession, err := auth.SessionRepo.ReadSession(sessionID)
 	if err == nil {
 		if _, err = wac.RestoreWithSession(wapiSession.WhatsAppSession); err != nil {
 			removeSessionFileTxt := ""
-			if err.Error() == "admin login responded with 401" {
-				_ = auth.SessionWorks.RemoveSession(wapiSession.SessionID)
+			if err.Error() == whatsapp.ErrMsg401 {
+				_ = auth.SessionRepo.RemoveSession(wapiSession.SessionID)
 				removeSessionFileTxt = ", probably logout happened on the phone, session file will be removed"
 			}
 			return nil, nil, fmt.Errorf("restoring failed: %v%v", err, removeSessionFileTxt)
 		}
 	} else {
-		qr := make(chan string)
+		wg := sync.WaitGroup{}
+		wg.Add(1)
 		go func() {
-			qrData := <-qr
-			terminal := qrCode.New()
-			terminal.Get(qrData).Print()
-			err = qrcode.WriteFile(qrData, qrcode.Medium, 256, auth.fileResolver.ResolveQrFilePath(sessionID))
-			if err != nil {
+			qrData := <-auth.qrDataChan
+			t := terminal.New()
+			t.Get(qrData).Print()
+			errWrite := qrcode.WriteFile(qrData, qrcode.Medium, 256, auth.fileResolver.ResolveQrFilePath(sessionID))
+			if errWrite != nil {
 				log.Printf("can't save QR-code as file: %v", err)
 			}
+			wg.Done()
 		}()
 		var session whatsappRhymen.Session
-		session, err = wac.Login(qr)
+		session, err = wac.Login(auth.qrDataChan)
+		wg.Wait()
 		removeErr := os.Remove(auth.fileResolver.ResolveQrFilePath(sessionID))
 		if removeErr != nil {
 			log.Printf("can't remove qr image: %v\n", err)
@@ -92,9 +102,9 @@ func (auth *Auth) Login(sessionID string) (whatsapp.Conn, *model.WapiSession, er
 		return nil, nil, fmt.Errorf("error adding connection to supervisor: %v", err)
 	}
 
-	err = auth.SessionWorks.WriteSession(wapiSession)
+	err = auth.SessionRepo.WriteSession(wapiSession)
 	if err != nil {
-		return wac, wapiSession, fmt.Errorf("error saving session: %v", err)
+		return nil, nil, fmt.Errorf("error saving session: %v", err)
 	}
 	return wac, wapiSession, nil
 }
