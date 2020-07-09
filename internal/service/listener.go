@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -20,12 +21,13 @@ type Listener interface {
 
 // WebHook listens for incoming messages and propagate them to webhook handler.
 type WebHook struct {
-	sessionWorks          repository.Session
+	sessionRepo           repository.Session
 	connectionsSupervisor Connections
 	auth                  Authorizer
 	webhookURL            string
 	msgRepo               repository.Message
 	client                httpInfra.Client
+	interruptChan         chan os.Signal
 }
 
 // NewWebHook creates listener for sending messages to webhook.
@@ -36,14 +38,16 @@ func NewWebHook(
 	webhookURL string,
 	msgRepo repository.Message,
 	client httpInfra.Client,
+	interruptChan chan os.Signal,
 ) *WebHook {
 	return &WebHook{
-		sessionWorks:          sessionWorks,
+		sessionRepo:           sessionWorks,
 		connectionsSupervisor: connectionsSupervisor,
 		auth:                  authorizer,
 		webhookURL:            webhookURL,
 		msgRepo:               msgRepo,
 		client:                client,
+		interruptChan:         interruptChan,
 	}
 }
 
@@ -51,7 +55,8 @@ func NewWebHook(
 func (l *WebHook) ListenForSession(sessionID string, wg *sync.WaitGroup) (gracefulDone bool, err error) {
 	if _, err = l.connectionsSupervisor.AuthenticatedConnectionForSession(sessionID); err == nil {
 		log.Printf("Session `%s` is already listenning", sessionID)
-		return false, err
+		wg.Done()
+		return false, fmt.Errorf("session `%s` is already listenning", sessionID)
 	}
 
 	wac, session, err := l.auth.Login(sessionID)
@@ -68,16 +73,15 @@ func (l *WebHook) ListenForSession(sessionID string, wg *sync.WaitGroup) (gracef
 		session,
 		l.msgRepo,
 		l.connectionsSupervisor,
-		l.sessionWorks,
+		l.sessionRepo,
 		l.client,
 		uint64(time.Now().Unix()),
 		l.webhookURL,
 	))
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(l.interruptChan, os.Interrupt, syscall.SIGTERM)
 	wg.Done()
-	<-c
+	<-l.interruptChan
 
 	waSession, err := wac.Disconnect()
 	session.WhatsAppSession = &waSession
@@ -85,7 +89,7 @@ func (l *WebHook) ListenForSession(sessionID string, wg *sync.WaitGroup) (gracef
 		log.Printf("error disconnecting: %v\n", err)
 		return false, err
 	}
-	if err := l.sessionWorks.WriteSession(session); err != nil {
+	if err := l.sessionRepo.WriteSession(session); err != nil {
 		log.Printf("error saving sessionRepo: %v", err)
 		return false, err
 	}
