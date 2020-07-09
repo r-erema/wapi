@@ -12,9 +12,9 @@ import (
 
 // RegisterSessionHandler is responsible for creation of new session.
 type RegisterSessionHandler struct {
-	auth         service.Authorizer
-	listener     service.Listener
-	sessionWorks repository.Session
+	auth        service.Authorizer
+	listener    service.Listener
+	sessionRepo repository.Session
 }
 
 // NewRegisterSessionHandler creates RegisterSessionHandler.
@@ -23,7 +23,7 @@ func NewRegisterSessionHandler(
 	l service.Listener,
 	sessRepo repository.Session,
 ) *RegisterSessionHandler {
-	return &RegisterSessionHandler{auth: authorizer, listener: l, sessionWorks: sessRepo}
+	return &RegisterSessionHandler{auth: authorizer, listener: l, sessionRepo: sessRepo}
 }
 
 // ServeHTTP registers session and starts listening incoming messages.
@@ -72,7 +72,7 @@ func (handler *RegisterSessionHandler) startListenIncomingMessages(sessionID str
 
 // TryToAutoConnectAllSessions make attempt to connect sessions automatically.
 func (handler *RegisterSessionHandler) TryToAutoConnectAllSessions() error {
-	sessionIDs, err := handler.sessionWorks.AllSavedSessionIds()
+	sessionIDs, err := handler.sessionRepo.AllSavedSessionIds()
 	if err != nil {
 		return err
 	}

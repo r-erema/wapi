@@ -16,15 +16,15 @@ import (
 	"github.com/r-erema/wapi/internal/service"
 	httpTest "github.com/r-erema/wapi/internal/testutil/http"
 	"github.com/r-erema/wapi/internal/testutil/mock"
-	"github.com/stretchr/testify/require"
 
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/gavv/httpexpect"
 	"github.com/golang/mock/gomock"
 	"github.com/magiconair/properties/assert"
+	"github.com/stretchr/testify/require"
 )
 
-type mocksFactory func(t *testing.T) (service.Authorizer, service.Connections, httpInfra.Client, *jsonInfra.MarshallCallback)
+type imagesMocksFactory func(t *testing.T) (service.Authorizer, service.Connections, httpInfra.Client, *jsonInfra.MarshallCallback)
 
 func TestNewImageHandler(t *testing.T) {
 	a, s, c, m := mocks(t)
@@ -39,7 +39,7 @@ func TestNewImageHandler(t *testing.T) {
 
 type testData struct {
 	name string
-	mocksFactory
+	imagesMocksFactory
 	jsonRequest  func() interface{}
 	expectStatus int
 }
@@ -175,7 +175,7 @@ func TestSendImageHandler(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			handler := NewImageHandler(tt.mocksFactory(t))
+			handler := NewImageHandler(tt.imagesMocksFactory(t))
 			server := httpTest.New(map[string]http.Handler{"/send-image/": handler})
 			defer server.Close()
 
