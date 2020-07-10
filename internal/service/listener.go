@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	httpInfra "github.com/r-erema/wapi/internal/infrastructure/http"
+	jsonInfra "github.com/r-erema/wapi/internal/infrastructure/json"
 	"github.com/r-erema/wapi/internal/repository"
 )
 
@@ -68,13 +70,15 @@ func (l *WebHook) ListenForSession(sessionID string, wg *sync.WaitGroup) (gracef
 
 	log.Printf("start listening messages for sessionRepo `%s`, bound login: `%s`", session.SessionID, session.WhatsAppSession.Wid)
 
-	wac.AddHandler(NewHandler(
+	marshal := jsonInfra.MarshallCallback(json.Marshal)
+	wac.AddHandler(NewMsgHandler(
 		wac,
 		session,
 		l.msgRepo,
 		l.connectionsSupervisor,
 		l.sessionRepo,
 		l.client,
+		&marshal,
 		uint64(time.Now().Unix()),
 		l.webhookURL,
 	))
