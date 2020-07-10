@@ -38,99 +38,119 @@ func TestNewWebHook(t *testing.T) {
 	assert.IsType(t, listener, &service.WebHook{})
 }
 
+func ok() listenerTestData {
+	return listenerTestData{
+		name:            "OK",
+		mocksFactory:    listenerMocks,
+		ignoreInterrupt: false,
+		waitErr:         false,
+	}
+}
+
+func sessionAlreadyListening() listenerTestData {
+	return listenerTestData{
+		name: "Session is already listening",
+		mocksFactory: func(t *testing.T) (
+			repository.Session,
+			service.Connections,
+			service.Authorizer,
+			string, repository.Message,
+			httpInfra.Client,
+			chan os.Signal,
+		) {
+			sessRepo, _, auth, wh, msgRepo, client, interruptCh := listenerMocks(t)
+			c := gomock.NewController(t)
+			connSV := mock.NewMockConnections(c)
+			connSV.EXPECT().AuthenticatedConnectionForSession(gomock.Any()).Return(nil, nil)
+			return sessRepo, connSV, auth, wh, msgRepo, client, interruptCh
+		},
+		ignoreInterrupt: true,
+		waitErr:         true,
+	}
+}
+
+func loginFailed() listenerTestData {
+	return listenerTestData{
+		name: "Login failed",
+		mocksFactory: func(t *testing.T) (
+			repository.Session,
+			service.Connections,
+			service.Authorizer,
+			string, repository.Message,
+			httpInfra.Client,
+			chan os.Signal,
+		) {
+			sessRepo, connSV, _, wh, msgRepo, client, interruptCh := listenerMocks(t)
+			c := gomock.NewController(t)
+			auth := mock.NewMockAuthorizer(c)
+			auth.EXPECT().Login(gomock.Any()).Return(nil, nil, errors.New("login failed"))
+			return sessRepo, connSV, auth, wh, msgRepo, client, interruptCh
+		},
+		ignoreInterrupt: true,
+		waitErr:         true,
+	}
+}
+
+func discconnectFailed() listenerTestData {
+	return listenerTestData{
+		name: "Disconnect failed",
+		mocksFactory: func(t *testing.T) (
+			repository.Session,
+			service.Connections,
+			service.Authorizer,
+			string, repository.Message,
+			httpInfra.Client,
+			chan os.Signal,
+		) {
+			sessRepo, connSV, _, wh, msgRepo, client, interruptCh := listenerMocks(t)
+
+			c := gomock.NewController(t)
+
+			conn := mock.NewMockConn(c)
+			conn.EXPECT().AddHandler(gomock.Any())
+			conn.EXPECT().Disconnect().Return(whatsapp.Session{}, errors.New("disconnect error"))
+
+			sess := &model.WapiSession{SessionID: "_sid_", WhatsAppSession: &whatsapp.Session{Wid: "_wid_"}}
+
+			auth := mock.NewMockAuthorizer(c)
+			auth.EXPECT().Login(gomock.Any()).Return(conn, sess, nil)
+
+			return sessRepo, connSV, auth, wh, msgRepo, client, interruptCh
+		},
+		ignoreInterrupt: false,
+		waitErr:         true,
+	}
+}
+
+func sessionWritingFailed() listenerTestData {
+	return listenerTestData{
+		name: "Session writing failed",
+		mocksFactory: func(t *testing.T) (
+			repository.Session,
+			service.Connections,
+			service.Authorizer,
+			string, repository.Message,
+			httpInfra.Client,
+			chan os.Signal,
+		) {
+			_, connSV, auth, wh, msgRepo, client, interruptCh := listenerMocks(t)
+			c := gomock.NewController(t)
+			sessRepo := mock.NewMockSession(c)
+			sessRepo.EXPECT().WriteSession(gomock.Any()).Return(errors.New("writing error"))
+			return sessRepo, connSV, auth, wh, msgRepo, client, interruptCh
+		},
+		ignoreInterrupt: false,
+		waitErr:         true,
+	}
+}
+
 func TestWebHook_ListenForSession(t *testing.T) {
 	tests := []listenerTestData{
-		{
-			name:            "OK",
-			mocksFactory:    listenerMocks,
-			ignoreInterrupt: false,
-			waitErr:         false,
-		},
-		{
-			name: "Session is already listening",
-			mocksFactory: func(t *testing.T) (
-				repository.Session,
-				service.Connections,
-				service.Authorizer,
-				string, repository.Message,
-				httpInfra.Client,
-				chan os.Signal,
-			) {
-				sessRepo, _, auth, wh, msgRepo, client, interruptCh := listenerMocks(t)
-				c := gomock.NewController(t)
-				connSV := mock.NewMockConnections(c)
-				connSV.EXPECT().AuthenticatedConnectionForSession(gomock.Any()).Return(nil, nil)
-				return sessRepo, connSV, auth, wh, msgRepo, client, interruptCh
-			},
-			ignoreInterrupt: true,
-			waitErr:         true,
-		},
-		{
-			name: "Login failed",
-			mocksFactory: func(t *testing.T) (
-				repository.Session,
-				service.Connections,
-				service.Authorizer,
-				string, repository.Message,
-				httpInfra.Client,
-				chan os.Signal,
-			) {
-				sessRepo, connSV, _, wh, msgRepo, client, interruptCh := listenerMocks(t)
-				c := gomock.NewController(t)
-				auth := mock.NewMockAuthorizer(c)
-				auth.EXPECT().Login(gomock.Any()).Return(nil, nil, errors.New("login failed"))
-				return sessRepo, connSV, auth, wh, msgRepo, client, interruptCh
-			},
-			ignoreInterrupt: true,
-			waitErr:         true,
-		},
-		{
-			name: "Disconnect failed",
-			mocksFactory: func(t *testing.T) (
-				repository.Session,
-				service.Connections,
-				service.Authorizer,
-				string, repository.Message,
-				httpInfra.Client,
-				chan os.Signal,
-			) {
-				sessRepo, connSV, _, wh, msgRepo, client, interruptCh := listenerMocks(t)
-
-				c := gomock.NewController(t)
-
-				conn := mock.NewMockConn(c)
-				conn.EXPECT().AddHandler(gomock.Any())
-				conn.EXPECT().Disconnect().Return(whatsapp.Session{}, errors.New("disconnect error"))
-
-				sess := &model.WapiSession{SessionID: "_sid_", WhatsAppSession: &whatsapp.Session{Wid: "_wid_"}}
-
-				auth := mock.NewMockAuthorizer(c)
-				auth.EXPECT().Login(gomock.Any()).Return(conn, sess, nil)
-
-				return sessRepo, connSV, auth, wh, msgRepo, client, interruptCh
-			},
-			ignoreInterrupt: false,
-			waitErr:         true,
-		},
-		{
-			name: "Session writing failed",
-			mocksFactory: func(t *testing.T) (
-				repository.Session,
-				service.Connections,
-				service.Authorizer,
-				string, repository.Message,
-				httpInfra.Client,
-				chan os.Signal,
-			) {
-				_, connSV, auth, wh, msgRepo, client, interruptCh := listenerMocks(t)
-				c := gomock.NewController(t)
-				sessRepo := mock.NewMockSession(c)
-				sessRepo.EXPECT().WriteSession(gomock.Any()).Return(errors.New("writing error"))
-				return sessRepo, connSV, auth, wh, msgRepo, client, interruptCh
-			},
-			ignoreInterrupt: false,
-			waitErr:         true,
-		},
+		ok(),
+		sessionAlreadyListening(),
+		loginFailed(),
+		discconnectFailed(),
+		sessionWritingFailed(),
 	}
 
 	for _, tt := range tests {
@@ -142,7 +162,6 @@ func TestWebHook_ListenForSession(t *testing.T) {
 			wg := sync.WaitGroup{}
 			wg.Add(1)
 			go func() {
-
 				if tt.ignoreInterrupt {
 					<-interruptCh
 				}
@@ -166,21 +185,22 @@ func TestWebHook_ListenForSession(t *testing.T) {
 }
 
 func listenerMocks(t *testing.T) (
-	repository.Session,
-	service.Connections,
-	service.Authorizer,
-	string,
-	repository.Message,
-	httpInfra.Client,
-	chan os.Signal,
+	_ repository.Session,
+	connSupervisor service.Connections,
+	auth service.Authorizer,
+	_ string,
+	_ repository.Message,
+	_ httpInfra.Client,
+	_ chan os.Signal,
 ) {
 	c := gomock.NewController(t)
 
 	sessRepo := mock.NewMockSession(c)
 	sessRepo.EXPECT().WriteSession(gomock.Any()).Return(nil)
 
-	connSupervisor := mock.NewMockConnections(c)
-	connSupervisor.EXPECT().AuthenticatedConnectionForSession(gomock.Any()).Return(nil, &service.NotFoundError{})
+	cs := mock.NewMockConnections(c)
+	cs.EXPECT().AuthenticatedConnectionForSession(gomock.Any()).Return(nil, &service.NotFoundError{})
+	connSupervisor = cs
 
 	conn := mock.NewMockConn(c)
 	conn.EXPECT().AddHandler(gomock.Any())
@@ -188,8 +208,9 @@ func listenerMocks(t *testing.T) (
 
 	sess := &model.WapiSession{SessionID: "_sid_", WhatsAppSession: &whatsapp.Session{Wid: "_wid_"}}
 
-	auth := mock.NewMockAuthorizer(c)
-	auth.EXPECT().Login(gomock.Any()).Return(conn, sess, nil)
+	a := mock.NewMockAuthorizer(c)
+	a.EXPECT().Login(gomock.Any()).Return(conn, sess, nil)
+	auth = a
 
 	return sessRepo,
 		connSupervisor,
