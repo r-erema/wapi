@@ -132,7 +132,7 @@ func errorImageSending() testData {
 			connections := mock.NewMockConnections(c)
 			connections.EXPECT().
 				AuthenticatedConnectionForSession(gomock.Any()).
-				Return(service.NewDTO(wac, &model.WapiSession{}), nil)
+				Return(service.NewDTO(wac, &model.WapiSession{}, make(chan string)), nil)
 
 			return authorizer, connections, httpClient, marshal
 		},
@@ -212,7 +212,7 @@ func mocks(t *testing.T) (
 	connections := mock.NewMockConnections(c)
 	connections.EXPECT().
 		AuthenticatedConnectionForSession(gomock.Any()).
-		Return(service.NewDTO(wac, &model.WapiSession{}), nil)
+		Return(service.NewDTO(wac, &model.WapiSession{}, make(chan string)), nil)
 
 	httpClient := mock.NewMockClient(c)
 	httpClient.EXPECT().

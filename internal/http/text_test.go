@@ -74,7 +74,7 @@ func TestSendTextMessageHandler_ServeHTTP(t *testing.T) {
 				connections := mock.NewMockConnections(c)
 				connections.EXPECT().
 					AuthenticatedConnectionForSession(gomock.Any()).
-					Return(service.NewDTO(wac, &model.WapiSession{}), nil)
+					Return(service.NewDTO(wac, &model.WapiSession{}, make(chan string)), nil)
 
 				return authorizer, connections, marshal
 			},
@@ -121,7 +121,7 @@ func mocksTextHandler(t *testing.T) (*mock.MockAuthorizer, *mock.MockConnections
 	connections := mock.NewMockConnections(c)
 	connections.EXPECT().
 		AuthenticatedConnectionForSession(gomock.Any()).
-		Return(service.NewDTO(wac, &model.WapiSession{}), nil)
+		Return(service.NewDTO(wac, &model.WapiSession{}, make(chan string)), nil)
 
 	marshal := jsonInfra.MarshallCallback(json.Marshal)
 	return mock.NewMockAuthorizer(c), connections, &marshal

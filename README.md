@@ -32,7 +32,7 @@ There are several parameters represented by environment variables:
 * **WAPI_CERT_FILE_PATH** - the path to the certificate file, e.g. `~/.ssl/cert.crt`  
 * **WAPI_CERT_KEY_PATH** - path to certificate key, e.g. `~/.ssl/cert.key`  
 * **WAPI_ENV** - wapi environment, valid `dev` or` prod` values, if its value is `dev`, then the certificate will not be verified  
-* **WAPI_CONNECTIONS_CHECKOUT_DURATION_SECS** - interval of ping connections on web sockets of all registered sessions, in seconds, by default `600`
+* **WAPI_CONNECTIONS_CHECKOUT_DURATION_MILLISECONDS** - interval of ping connections on web sockets of all registered sessions, in milliseconds, by default `6000`
 
 ## Api methods ##
 

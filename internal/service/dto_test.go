@@ -18,18 +18,18 @@ func TestNewDTO(t *testing.T) {
 }
 
 func TestDTOSession(t *testing.T) {
-	conn, sess := dtoMocks(t)
-	dto := service.NewDTO(conn, sess)
+	conn, sess, q := dtoMocks(t)
+	dto := service.NewDTO(conn, sess, q)
 	assert.IsType(t, sess, dto.Session())
 }
 
 func TestDTOWac(t *testing.T) {
-	conn, sess := dtoMocks(t)
-	dto := service.NewDTO(conn, sess)
+	conn, sess, q := dtoMocks(t)
+	dto := service.NewDTO(conn, sess, q)
 	assert.IsType(t, conn, dto.Wac())
 }
 
-func dtoMocks(t *testing.T) (whatsapp.Conn, *model.WapiSession) {
+func dtoMocks(t *testing.T) (whatsapp.Conn, *model.WapiSession, chan string) {
 	c := gomock.NewController(t)
-	return mock.NewMockConn(c), &model.WapiSession{}
+	return mock.NewMockConn(c), &model.WapiSession{}, make(chan string)
 }

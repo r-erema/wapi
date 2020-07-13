@@ -10,14 +10,14 @@ const (
 	ListenHTTPHost = "WAPI_INTERNAL_HOST" // Service HTTP host aka API url.
 	// WhatsAppConnectionTimeout represents timeout of establishing connection with WhatsApp service in seconds.
 	WhatsAppConnectionTimeout   = "WAPI_WHATSAPP_CONNECTION_TIMEOUT"
-	FileSystemRootPoint         = "WAPI_FILE_SYSTEM_ROOT_POINT_FULL_PATH"   // Path of storing static files.
-	WebHookURL                  = "WAPI_GETTING_MESSAGES_WEBHOOK"           // Base webhook url.
-	RedisHost                   = "WAPI_REDIS_HOST"                         // Redis host.
-	Env                         = "WAPI_ENV"                                // Wapi environment: dev or prod.
-	CertFilePath                = "WAPI_CERT_FILE_PATH"                     // Path to certificate file.
-	CertKeyPath                 = "WAPI_CERT_KEY_PATH"                      // Path to certificate key file.
-	SentryDSN                   = "WAPI_SENTRY_DSN"                         // Sentry connection string.
-	ConnectionsCheckoutDuration = "WAPI_CONNECTIONS_CHECKOUT_DURATION_SECS" // Connections checkout durations in seconds.
+	FileSystemRootPoint         = "WAPI_FILE_SYSTEM_ROOT_POINT_FULL_PATH"           // Path of storing static files.
+	WebHookURL                  = "WAPI_GETTING_MESSAGES_WEBHOOK"                   // Base webhook url.
+	RedisHost                   = "WAPI_REDIS_HOST"                                 // Redis host.
+	Env                         = "WAPI_ENV"                                        // Wapi environment: dev or prod.
+	CertFilePath                = "WAPI_CERT_FILE_PATH"                             // Path to certificate file.
+	CertKeyPath                 = "WAPI_CERT_KEY_PATH"                              // Path to certificate key file.
+	SentryDSN                   = "WAPI_SENTRY_DSN"                                 // Sentry connection string.
+	ConnectionsCheckoutDuration = "WAPI_CONNECTIONS_CHECKOUT_DURATION_MILLISECONDS" // Connections checkout durations in seconds.
 
 	DevMode  = "dev"  // Development mode value of wapi environment.
 	ProdMode = "prod" // Production mode value of wapi environment.

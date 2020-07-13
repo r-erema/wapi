@@ -39,7 +39,7 @@ func TestActiveConnectionInfoHandler_ServeHTTP(t *testing.T) {
 					DoAndReturn(func(sessionID string) (*service.SessionConnectionDTO, error) {
 						conn := mock.NewMockConn(mockCtrl)
 						conn.EXPECT().Info().Return(&whatsapp.Info{Wid: "wid"})
-						return service.NewDTO(conn, &model.WapiSession{}), nil
+						return service.NewDTO(conn, &model.WapiSession{}, make(chan string)), nil
 					})
 				return cs
 			},
@@ -84,7 +84,7 @@ func TestFailEncodeConnectionInfo(t *testing.T) {
 		DoAndReturn(func(sessionID string) (*service.SessionConnectionDTO, error) {
 			conn := mock.NewMockConn(mockCtrl)
 			conn.EXPECT().Info().Return(&whatsapp.Info{Wid: "wid"})
-			return service.NewDTO(conn, &model.WapiSession{}), nil
+			return service.NewDTO(conn, &model.WapiSession{}, make(chan string)), nil
 		})
 	handler := NewInfo(cs)
 	w := mock.NewFailResponseRecorder(httptest.NewRecorder())
