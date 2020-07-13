@@ -2,13 +2,12 @@ package service
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"time"
 
 	httpInfra "github.com/r-erema/wapi/internal/infrastructure/http"
+	jsonInfra "github.com/r-erema/wapi/internal/infrastructure/json"
 	infrastructureWhatsapp "github.com/r-erema/wapi/internal/infrastructure/whatsapp"
 	"github.com/r-erema/wapi/internal/model"
 	"github.com/r-erema/wapi/internal/repository"
@@ -28,18 +27,20 @@ type Handler struct {
 	connectionsSupervisor Connections
 	storedSession         repository.Session
 	client                httpInfra.Client
+	marshal               *jsonInfra.MarshallCallback
 	InitTimestamp         uint64
 	WebhookURL            string
 }
 
-// NewHandler creates errors and messages handler.
-func NewHandler(
+// NewMsgHandler creates errors and messages handler.
+func NewMsgHandler(
 	connection infrastructureWhatsapp.Conn,
 	wapiSession *model.WapiSession,
 	messageRepo repository.Message,
 	connectionsSupervisor Connections,
 	sessionRepo repository.Session,
 	client httpInfra.Client,
+	marshal *jsonInfra.MarshallCallback,
 	initTimestamp uint64,
 	webhookURL string,
 ) *Handler {
@@ -52,6 +53,7 @@ func NewHandler(
 		connectionsSupervisor: connectionsSupervisor,
 		storedSession:         sessionRepo,
 		client:                client,
+		marshal:               marshal,
 	}
 }
 
@@ -120,33 +122,24 @@ func (h *Handler) HandleTextMessage(msg *whatsapp.TextMessage) {
 
 	log.Printf("got msg to handle from `%v`, destination `%v`", msg.Info.RemoteJid, h.Session.WhatsAppSession.Wid)
 
-	if msg.Info.FromMe {
+	marshal := *h.marshal
+	requestBody, err := marshal(&msg)
+	if err != nil {
+		log.Println("error msg marshaling", err)
 		return
 	}
 
-	requestBody, err := json.Marshal(&msg)
-	if err != nil {
-		log.Println("error msg marshaling", err)
-	}
-
-	resp, err := h.client.Post(h.SessionWebhookURL(), "application/json", bytes.NewBuffer(requestBody))
-
+	_, err = h.client.Post(h.SessionWebhookURL(), "application/json", bytes.NewBuffer(requestBody))
 	if err != nil {
 		log.Println("error happened getting the response", err)
 		return
 	}
 
+	log.Printf("msg sent to `%s`, by session `%s`, login `%s`", h.SessionWebhookURL(), h.Session.SessionID, h.Session.WhatsAppSession.Wid)
+
 	err = h.messageRepo.SaveMessageTime("wapi_sent_message:"+msg.Info.Id, time.Now())
 	if err != nil {
 		log.Printf("can't store msg id `%s` in redis: %v\n", msg.Info.Id, err)
-	}
-	log.Printf("msg sent to `%s`, by session `%s`, login `%s`", h.SessionWebhookURL(), h.Session.SessionID, h.Session.WhatsAppSession.Wid)
-
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-	if _, err = ioutil.ReadAll(resp.Body); err != nil {
-		fmt.Println("error happened reading the body", err)
 		return
 	}
 }
