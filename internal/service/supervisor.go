@@ -75,7 +75,7 @@ func (supervisor *ConnectionsPool) AuthenticatedConnectionForSession(sessionID s
 }
 
 func (supervisor *ConnectionsPool) pingConnection(sessConn *SessionConnectionDTO) {
-	ticker := time.NewTicker(supervisor.pingDevicesDuration * time.Second)
+	ticker := time.NewTicker(supervisor.pingDevicesDuration * time.Millisecond)
 	notificationLimit := 3
 	currentFailedAttempt := 0
 	currentAttemptResult, previousAttemptResult := true, true

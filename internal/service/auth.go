@@ -97,7 +97,7 @@ func (auth *Auth) Login(sessionID string) (whatsapp.Conn, *model.WapiSession, er
 
 	if err = auth.connectionsSupervisor.AddAuthenticatedConnectionForSession(
 		sessionID,
-		NewDTO(wac, wapiSession),
+		NewDTO(wac, wapiSession, make(chan string)),
 	); err != nil {
 		return nil, nil, fmt.Errorf("error adding connection to supervisor: %v", err)
 	}

@@ -23,7 +23,6 @@ func (s SessionConnectionDTO) Wac() whatsapp.Conn {
 }
 
 // NewDTO creates DTO.
-func NewDTO(wac whatsapp.Conn, sess *model.WapiSession) *SessionConnectionDTO {
-	quitCh := make(chan string)
+func NewDTO(wac whatsapp.Conn, sess *model.WapiSession, quitCh chan string) *SessionConnectionDTO {
 	return &SessionConnectionDTO{wac: wac, session: sess, pingQuit: &quitCh}
 }
