@@ -18,10 +18,18 @@ type Connections interface {
 	AuthenticatedConnectionForSession(sessionID string) (*SessionConnectionDTO, error)
 }
 
+const defaultNotificationsLimit = 3
+
+type notificationState struct {
+	notificationLimit, currentFailedAttempt     int
+	currentAttemptResult, previousAttemptResult bool
+}
+
 // ConnectionsPool stores and checks connections state.
 type ConnectionsPool struct {
 	connectionSessionPool map[string]*SessionConnectionDTO
 	pingDevicesDuration   time.Duration
+	notifications         notificationState
 }
 
 // Error for case of not found connection.
@@ -38,6 +46,12 @@ func NewSV(pingDevicesDuration time.Duration) *ConnectionsPool {
 	return &ConnectionsPool{
 		connectionSessionPool: make(map[string]*SessionConnectionDTO),
 		pingDevicesDuration:   pingDevicesDuration,
+		notifications: notificationState{
+			notificationLimit:     defaultNotificationsLimit,
+			currentFailedAttempt:  0,
+			currentAttemptResult:  true,
+			previousAttemptResult: true,
+		},
 	}
 }
 
@@ -76,43 +90,11 @@ func (supervisor *ConnectionsPool) AuthenticatedConnectionForSession(sessionID s
 
 func (supervisor *ConnectionsPool) pingConnection(sessConn *SessionConnectionDTO) {
 	ticker := time.NewTicker(supervisor.pingDevicesDuration * time.Millisecond)
-	notificationLimit := 3
-	currentFailedAttempt := 0
-	currentAttemptResult, previousAttemptResult := true, true
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
-				pong, err := sessConn.Wac().AdminTest()
-				if !pong || err != nil {
-					currentAttemptResult = false
-					if notificationLimit > currentFailedAttempt {
-						msg := fmt.Sprintf(
-							"device of session `%s` login `%s` is not responding: %v",
-							sessConn.Session().SessionID,
-							sessConn.Wac().Info().Wid,
-							err,
-						)
-						sentry.CaptureMessage(msg)
-						log.Printf("warning: %s", msg)
-					}
-					currentFailedAttempt++
-				} else {
-					currentAttemptResult = true
-				}
-
-				if !previousAttemptResult && currentAttemptResult {
-					msg := fmt.Sprintf(
-						"device of session `%s` login `%s` is responding again",
-						sessConn.Session().SessionID,
-						sessConn.Wac().Info().Wid,
-					)
-					sentry.CaptureMessage(msg)
-					log.Printf("warning: %s", msg)
-					currentFailedAttempt = 0
-				}
-
-				previousAttemptResult = currentAttemptResult
+				supervisor.notificationLogic(sessConn)
 			case <-*sessConn.pingQuit:
 				log.Printf("ping connection for session `%s` disabled", sessConn.Session().SessionID)
 				ticker.Stop()
@@ -120,4 +102,45 @@ func (supervisor *ConnectionsPool) pingConnection(sessConn *SessionConnectionDTO
 			}
 		}
 	}()
+}
+
+func (supervisor *ConnectionsPool) notificationLogic(sessConn *SessionConnectionDTO) {
+	pong, err := sessConn.Wac().AdminTest()
+	if !pong || err != nil {
+		supervisor.notifications.currentAttemptResult = false
+		if supervisor.notifications.notificationLimit > supervisor.notifications.currentFailedAttempt {
+			notifyDeviceUnavailable(sessConn, err)
+		}
+		supervisor.notifications.currentFailedAttempt++
+	} else {
+		supervisor.notifications.currentAttemptResult = true
+	}
+
+	if !supervisor.notifications.previousAttemptResult && supervisor.notifications.currentAttemptResult {
+		notifyDeviceActiveAgain(sessConn)
+		supervisor.notifications.currentFailedAttempt = 0
+	}
+
+	supervisor.notifications.previousAttemptResult = supervisor.notifications.currentAttemptResult
+}
+
+func notifyDeviceActiveAgain(sessConn *SessionConnectionDTO) {
+	msg := fmt.Sprintf(
+		"device of session `%s` login `%s` is responding again",
+		sessConn.Session().SessionID,
+		sessConn.Wac().Info().Wid,
+	)
+	sentry.CaptureMessage(msg)
+	log.Printf("warning: %s", msg)
+}
+
+func notifyDeviceUnavailable(sessConn *SessionConnectionDTO, reason error) {
+	msg := fmt.Sprintf(
+		"device of session `%s` login `%s` is not responding: %v",
+		sessConn.Session().SessionID,
+		sessConn.Wac().Info().Wid,
+		reason,
+	)
+	sentry.CaptureMessage(msg)
+	log.Printf("warning: %s", msg)
 }

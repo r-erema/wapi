@@ -43,28 +43,19 @@ type Config struct {
 
 // New creates common config contains all application parameters.
 func New() (*Config, error) {
-	env := os.Getenv(Env)
-	if env == "" {
-		env = ProdMode
+	env, err := envMode()
+	if err != nil {
+		return nil, err
 	}
-	if env != DevMode && env != ProdMode {
-		return nil, fmt.Errorf("`%s` param allowed values: `%s`, `%s`", Env, DevMode, ProdMode)
-	}
+
+	checkoutDuration := duration()
+
+	connectionTimeout := timeout()
 
 	var listenHost string
 	var ok bool
 	if listenHost, ok = os.LookupEnv(ListenHTTPHost); !ok {
 		return nil, fmt.Errorf("required evironment variable `%s` isn't set", ListenHTTPHost)
-	}
-
-	checkoutDuration, err := strconv.Atoi(os.Getenv(ConnectionsCheckoutDuration))
-	if err != nil {
-		checkoutDuration = DefaultConnectionsCheckoutDuration
-	}
-
-	connectionTimeout, err := strconv.Atoi(os.Getenv(WhatsAppConnectionTimeout))
-	if err != nil {
-		connectionTimeout = DefaultConnectionTimeout
 	}
 
 	var filesRootPath string
@@ -77,12 +68,9 @@ func New() (*Config, error) {
 		return nil, fmt.Errorf("required evironment variable `%s` isn't set", RedisHost)
 	}
 
-	var webHookURL string
-	if webHookURL, ok = os.LookupEnv(WebHookURL); !ok {
-		return nil, fmt.Errorf("required evironment variable `%s` isn't set", WebHookURL)
-	}
-	if webHookURL[len(webHookURL)-1:] != "/" {
-		return nil, fmt.Errorf("variable `%s` must contain trailing slash", WebHookURL)
+	webHookURL, err := webHook()
+	if err != nil {
+		return nil, err
 	}
 
 	return &Config{
@@ -97,4 +85,43 @@ func New() (*Config, error) {
 		SentryDSN:                   os.Getenv(SentryDSN),
 		ConnectionsCheckoutDuration: checkoutDuration,
 	}, nil
+}
+
+func envMode() (string, error) {
+	env := os.Getenv(Env)
+	if env == "" {
+		env = ProdMode
+	}
+	if env != DevMode && env != ProdMode {
+		return "", fmt.Errorf("`%s` param allowed values: `%s`, `%s`", Env, DevMode, ProdMode)
+	}
+	return env, nil
+}
+
+func webHook() (string, error) {
+	var webHookURL string
+	var ok bool
+	if webHookURL, ok = os.LookupEnv(WebHookURL); !ok {
+		return webHookURL, fmt.Errorf("required evironment variable `%s` isn't set", WebHookURL)
+	}
+	if webHookURL[len(webHookURL)-1:] != "/" {
+		return webHookURL, fmt.Errorf("variable `%s` must contain trailing slash", WebHookURL)
+	}
+	return webHookURL, nil
+}
+
+func duration() int {
+	checkoutDuration, err := strconv.Atoi(os.Getenv(ConnectionsCheckoutDuration))
+	if err != nil {
+		return DefaultConnectionsCheckoutDuration
+	}
+	return checkoutDuration
+}
+
+func timeout() int {
+	connectionTimeout, err := strconv.Atoi(os.Getenv(WhatsAppConnectionTimeout))
+	if err != nil {
+		return DefaultConnectionTimeout
+	}
+	return connectionTimeout
 }
