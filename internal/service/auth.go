@@ -60,39 +60,14 @@ func (auth *Auth) Login(sessionID string) (whatsapp.Conn, *model.WapiSession, er
 
 	wapiSession, err := auth.SessionRepo.ReadSession(sessionID)
 	if err == nil {
-		if _, err = wac.RestoreWithSession(wapiSession.WhatsAppSession); err != nil {
-			removeSessionFileTxt := ""
-			if err.Error() == whatsapp.ErrMsg401 {
-				_ = auth.SessionRepo.RemoveSession(wapiSession.SessionID)
-				removeSessionFileTxt = ", probably logout happened on the phone, session file will be removed"
-			}
-			return nil, nil, fmt.Errorf("restoring failed: %v%v", err, removeSessionFileTxt)
+		if loginErr := auth.tryLoginBySession(wac, wapiSession); loginErr != nil {
+			return nil, nil, loginErr
 		}
 	} else {
-		wg := sync.WaitGroup{}
-		wg.Add(1)
-		go func() {
-			qrData := <-auth.qrDataChan
-			t := terminal.New()
-			t.Get(qrData).Print()
-			errWrite := qrcode.WriteFile(qrData, qrcode.Medium, 256, auth.fileResolver.ResolveQrFilePath(sessionID))
-			if errWrite != nil {
-				log.Printf("can't save QR-code as file: %v", err)
-			}
-			wg.Done()
-		}()
-		var session whatsappRhymen.Session
-		session, err = wac.Login(auth.qrDataChan)
-		wg.Wait()
-		removeErr := os.Remove(auth.fileResolver.ResolveQrFilePath(sessionID))
-		if removeErr != nil {
-			log.Printf("can't remove qr image: %v\n", err)
-		}
-
+		wapiSession, err = auth.loginByQR(sessionID, wac)
 		if err != nil {
-			return nil, nil, fmt.Errorf("error during login: %v", err)
+			return nil, nil, err
 		}
-		wapiSession = &model.WapiSession{SessionID: sessionID, WhatsAppSession: &session}
 	}
 
 	if err = auth.connectionsSupervisor.AddAuthenticatedConnectionForSession(
@@ -107,4 +82,43 @@ func (auth *Auth) Login(sessionID string) (whatsapp.Conn, *model.WapiSession, er
 		return nil, nil, fmt.Errorf("error saving session: %v", err)
 	}
 	return wac, wapiSession, nil
+}
+
+func (auth *Auth) loginByQR(sessionID string, wac whatsapp.Conn) (*model.WapiSession, error) {
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		qrData := <-auth.qrDataChan
+		t := terminal.New()
+		t.Get(qrData).Print()
+		errWrite := qrcode.WriteFile(qrData, qrcode.Medium, 256, auth.fileResolver.ResolveQrFilePath(sessionID))
+		if errWrite != nil {
+			log.Printf("can't save QR-code as file: %v", errWrite)
+		}
+		wg.Done()
+	}()
+	var session whatsappRhymen.Session
+	session, err := wac.Login(auth.qrDataChan)
+	wg.Wait()
+	removeErr := os.Remove(auth.fileResolver.ResolveQrFilePath(sessionID))
+	if removeErr != nil {
+		log.Printf("can't remove qr image: %v\n", err)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return &model.WapiSession{SessionID: sessionID, WhatsAppSession: &session}, nil
+}
+
+func (auth *Auth) tryLoginBySession(wac whatsapp.Conn, wapiSession *model.WapiSession) error {
+	if _, err := wac.RestoreWithSession(wapiSession.WhatsAppSession); err != nil {
+		removeSessionFileTxt := ""
+		if err.Error() == whatsapp.ErrMsg401 {
+			_ = auth.SessionRepo.RemoveSession(wapiSession.SessionID)
+			removeSessionFileTxt = ", probably logout happened on the phone, session file will be removed"
+		}
+		return fmt.Errorf("restoring failed: %v%v", err, removeSessionFileTxt)
+	}
+	return nil
 }

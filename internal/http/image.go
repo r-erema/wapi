@@ -85,17 +85,24 @@ func (h *SendImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		handleError(w, "sending message error", err, http.StatusInternalServerError)
 	}
 	log.Printf("message sent to %s by session %s \n", msgReq.ChatID, msgReq.SessionID)
+	if err := h.writeMsgToResponse(&message, w); err != nil {
+		return
+	}
+}
+
+func (h *SendImageHandler) writeMsgToResponse(msg *whatsapp.ImageMessage, w http.ResponseWriter) error {
 	marshal := *h.marshal
-	responseBody, err := marshal(&message)
+	responseBody, err := marshal(msg)
 	if err != nil {
 		handleError(w, "error message marshaling", err, http.StatusInternalServerError)
-		return
+		return err
 	}
 	w.Header().Set("Content-Type", "application/json")
 	if _, err = w.Write(responseBody); err != nil {
 		handleError(w, "can't write body to response", err, http.StatusInternalServerError)
-		return
+		return err
 	}
+	return nil
 }
 
 // SendImageRequest is the request for sending image to WhatsApp.
