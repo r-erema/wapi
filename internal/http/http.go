@@ -16,6 +16,31 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// AppError is custom http application error
+type AppError struct {
+	Error       error
+	ResponseMsg string
+	Code        int
+}
+
+// AppHTTPHandler is custom http handler returning custom application error type
+type AppHTTPHandler interface {
+	Handle(http.ResponseWriter, *http.Request) *AppError
+}
+
+// AppHandlerRunner starts application http handler implemented AppHTTPHandler interface
+type AppHandlerRunner struct {
+	H AppHTTPHandler
+}
+
+// ServeHTTP handles http request of particular AppHTTPHandler interface implementation.
+func (fn AppHandlerRunner) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if err := fn.H.Handle(w, r); err != nil {
+		http.Error(w, err.ResponseMsg, err.Code)
+		log.Printf("http request serving error: %+v\n", err.Error)
+	}
+}
+
 // Router creates http handlers and bind them with paths.
 func Router(
 	conf *config.Config,
@@ -52,17 +77,12 @@ func Router(
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(cors)
 
-	router.Handle("/register-session/", registerHandler).Methods(http.MethodPost)
-	router.Handle("/send-message/", sendMessageHandler).Methods(http.MethodPost)
-	router.Handle("/send-image/", sendImageHandler).Methods(http.MethodPost)
-	router.Handle("/get-qr-code/{sessionID}/", getQRImageHandler).Methods(http.MethodGet)
-	router.Handle("/get-session-info/{sessionID}/", getSessionInfoHandler).Methods(http.MethodGet)
-	router.Handle("/get-active-connection-info/{sessionID}/", getActiveConnectionInfoHandler).Methods(http.MethodGet)
+	router.Handle("/register-session/", AppHandlerRunner{H: registerHandler}).Methods(http.MethodPost)
+	router.Handle("/send-message/", AppHandlerRunner{H: sendMessageHandler}).Methods(http.MethodPost)
+	router.Handle("/send-image/", AppHandlerRunner{H: sendImageHandler}).Methods(http.MethodPost)
+	router.Handle("/get-qr-code/{sessionID}/", AppHandlerRunner{H: getQRImageHandler}).Methods(http.MethodGet)
+	router.Handle("/get-session-info/{sessionID}/", AppHandlerRunner{H: getSessionInfoHandler}).Methods(http.MethodGet)
+	router.Handle("/get-active-connection-info/{sessionID}/", AppHandlerRunner{H: getActiveConnectionInfoHandler}).Methods(http.MethodGet)
 
 	return router, nil
-}
-
-func handleError(w http.ResponseWriter, errorPrefix string, err error, httpStatus int) {
-	http.Error(w, errorPrefix, httpStatus)
-	log.Printf("%s: %v\n", errorPrefix, err)
 }

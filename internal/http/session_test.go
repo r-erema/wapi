@@ -1,4 +1,4 @@
-package http
+package http_test
 
 import (
 	"fmt"
@@ -7,19 +7,21 @@ import (
 	"os"
 	"testing"
 
+	internalHttp "github.com/r-erema/wapi/internal/http"
 	"github.com/r-erema/wapi/internal/model"
+	testHttp "github.com/r-erema/wapi/internal/testutil/http"
 	"github.com/r-erema/wapi/internal/testutil/mock"
 
 	"github.com/gavv/httpexpect/v2"
 	"github.com/golang/mock/gomock"
-	"github.com/magiconair/properties/assert"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewSessInfoHandler(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	sessionRepo := mock.NewMockSession(mockCtrl)
-	assert.Equal(t, NewSessInfoHandler(sessionRepo), &SessInfoHandler{sessionRepo: sessionRepo})
+	assert.NotNil(t, internalHttp.NewSessInfoHandler(sessionRepo))
 }
 
 func TestSessInfoHandler_ServeHTTP(t *testing.T) {
@@ -29,8 +31,8 @@ func TestSessInfoHandler_ServeHTTP(t *testing.T) {
 		expectStatus int
 	}{
 		{
-			"OK",
-			func(t *testing.T) *mock.MockSession {
+			name: "OK",
+			mocksFactory: func(t *testing.T) *mock.MockSession {
 				mockCtrl := gomock.NewController(t)
 				sessionRepo := mock.NewMockSession(mockCtrl)
 				sessionRepo.EXPECT().
@@ -40,11 +42,11 @@ func TestSessInfoHandler_ServeHTTP(t *testing.T) {
 					})
 				return sessionRepo
 			},
-			http.StatusOK,
+			expectStatus: http.StatusOK,
 		},
 		{
-			"Session not found",
-			func(t *testing.T) *mock.MockSession {
+			name: "Session not found",
+			mocksFactory: func(t *testing.T) *mock.MockSession {
 				mockCtrl := gomock.NewController(t)
 				sessionRepo := mock.NewMockSession(mockCtrl)
 				sessionRepo.EXPECT().
@@ -54,11 +56,11 @@ func TestSessInfoHandler_ServeHTTP(t *testing.T) {
 					})
 				return sessionRepo
 			},
-			http.StatusNotFound,
+			expectStatus: http.StatusNotFound,
 		},
 		{
-			"Internal server error",
-			func(t *testing.T) *mock.MockSession {
+			name: "Internal server error",
+			mocksFactory: func(t *testing.T) *mock.MockSession {
 				mockCtrl := gomock.NewController(t)
 				sessionRepo := mock.NewMockSession(mockCtrl)
 				sessionRepo.EXPECT().
@@ -68,15 +70,16 @@ func TestSessInfoHandler_ServeHTTP(t *testing.T) {
 					})
 				return sessionRepo
 			},
-			http.StatusInternalServerError,
+			expectStatus: http.StatusInternalServerError,
 		},
 	}
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			handler := NewSessInfoHandler(tt.mocksFactory(t))
-			server := httptest.NewServer(handler)
+			server := testHttp.New(map[string]internalHttp.AppHTTPHandler{
+				"/get-session-info/_sess_id_/": internalHttp.NewSessInfoHandler(tt.mocksFactory(t)),
+			})
 			defer server.Close()
 			expect := httpexpect.New(t, server.URL)
 
@@ -96,12 +99,12 @@ func TestFailEncodeSession(t *testing.T) {
 			return nil, nil
 		})
 
-	handler := NewSessInfoHandler(sessionRepo)
+	handler := internalHttp.NewSessInfoHandler(sessionRepo)
 	w := mock.NewFailResponseRecorder(httptest.NewRecorder())
 	r, err := http.NewRequest("GET", "/get-session-info/_sess_id_/", nil)
 	require.Nil(t, err)
 
-	handler.ServeHTTP(w, r)
+	internalHttp.AppHandlerRunner{H: handler}.ServeHTTP(w, r)
 
 	assert.Equal(t, w.Status(), http.StatusInternalServerError)
 }

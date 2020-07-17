@@ -1,4 +1,4 @@
-package http
+package http_test
 
 import (
 	"errors"
@@ -7,20 +7,21 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	internalHttp "github.com/r-erema/wapi/internal/http"
 	"github.com/r-erema/wapi/internal/service"
 	httpTest "github.com/r-erema/wapi/internal/testutil/http"
 	"github.com/r-erema/wapi/internal/testutil/mock"
 
 	"github.com/gavv/httpexpect"
 	"github.com/golang/mock/gomock"
-	"github.com/magiconair/properties/assert"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewQR(t *testing.T) {
 	fs, fileResolver := qrMocks(t)
-	handler := NewQR(fs, fileResolver)
-	assert.Equal(t, handler, &ImageHandler{fs: fs, qrFileResolver: fileResolver})
+	handler := internalHttp.NewQR(fs, fileResolver)
+	assert.NotNil(t, handler)
 }
 
 func TestImageHandler_ServeHTTP(t *testing.T) {
@@ -80,8 +81,8 @@ func TestImageHandler_ServeHTTP(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			handler := NewQR(tt.mocksFactory(t))
-			server := httpTest.New(map[string]http.Handler{"/get-qr-code/{sessionID}/": handler})
+			handler := internalHttp.NewQR(tt.mocksFactory(t))
+			server := httpTest.New(map[string]internalHttp.AppHTTPHandler{"/get-qr-code/{sessionID}/": handler})
 			defer server.Close()
 
 			expect := httpexpect.New(t, server.URL)
@@ -92,8 +93,8 @@ func TestImageHandler_ServeHTTP(t *testing.T) {
 	}
 
 	fs, fileResolver := qrMocks(t)
-	handler := NewQR(fs, fileResolver)
-	server := httpTest.New(map[string]http.Handler{"/get-qr-code/{sessionID}/": handler})
+	handler := internalHttp.NewQR(fs, fileResolver)
+	server := httpTest.New(map[string]internalHttp.AppHTTPHandler{"/get-qr-code/{sessionID}/": handler})
 	defer server.Close()
 
 	expect := httpexpect.New(t, server.URL)
@@ -103,11 +104,11 @@ func TestImageHandler_ServeHTTP(t *testing.T) {
 }
 
 func TestQRHandlerFailWriteResponse(t *testing.T) {
-	handler := NewQR(qrMocks(t))
+	handler := internalHttp.NewQR(qrMocks(t))
 	w := mock.NewFailResponseRecorder(httptest.NewRecorder())
 	r, err := http.NewRequest("GET", "/get-qr-code/_sid_/", nil)
 	require.Nil(t, err)
-	handler.ServeHTTP(w, r)
+	internalHttp.AppHandlerRunner{H: handler}.ServeHTTP(w, r)
 	assert.Equal(t, w.Status(), http.StatusInternalServerError)
 }
 

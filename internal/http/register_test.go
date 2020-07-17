@@ -1,13 +1,14 @@
-package http
+package http_test
 
 import (
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"sync"
 	"testing"
 
+	internalHttp "github.com/r-erema/wapi/internal/http"
 	"github.com/r-erema/wapi/internal/model"
+	testHttp "github.com/r-erema/wapi/internal/testutil/http"
 	"github.com/r-erema/wapi/internal/testutil/mock"
 
 	"github.com/gavv/httpexpect/v2"
@@ -23,27 +24,27 @@ func TestHandlerHTTPRequests(t *testing.T) {
 		expectStatus int
 	}{
 		{
-			"OK",
-			map[string]string{"session_id": "session_id_token_81E25FCF8393C916D131A81C60AFFEB11"},
-			prepareMocks,
-			http.StatusOK,
+			name:         "OK",
+			data:         map[string]string{"session_id": "session_id_token_81E25FCF8393C916D131A81C60AFFEB11"},
+			mocksFactory: prepareMocks,
+			expectStatus: http.StatusOK,
 		},
 		{
-			"Invalid JSON",
-			"invalid__json",
-			prepareMocks,
-			http.StatusBadRequest,
+			name:         "Invalid JSON",
+			data:         "invalid__json",
+			mocksFactory: prepareMocks,
+			expectStatus: http.StatusBadRequest,
 		},
 		{
-			"Empty Session ID",
-			map[string]string{"session_id": ""},
-			prepareMocks,
-			http.StatusBadRequest,
+			name:         "Empty Session ID",
+			data:         map[string]string{"session_id": ""},
+			mocksFactory: prepareMocks,
+			expectStatus: http.StatusBadRequest,
 		},
 		{
-			"Listener error",
-			map[string]string{"session_id": "session_id_token_81E25FCF8393C916D131A81C60AFFEB11"},
-			func(t *testing.T) (*mock.MockAuthorizer, *mock.MockListener, *mock.MockSession) {
+			name: "Listener error",
+			data: map[string]string{"session_id": "session_id_token_81E25FCF8393C916D131A81C60AFFEB11"},
+			mocksFactory: func(t *testing.T) (*mock.MockAuthorizer, *mock.MockListener, *mock.MockSession) {
 				mockCtrl := gomock.NewController(t)
 				listener := mock.NewMockListener(mockCtrl)
 				listener.EXPECT().
@@ -57,15 +58,16 @@ func TestHandlerHTTPRequests(t *testing.T) {
 				auth, _, sessionWorks := prepareMocks(t)
 				return auth, listener, sessionWorks
 			},
-			http.StatusInternalServerError,
+			expectStatus: http.StatusInternalServerError,
 		},
 	}
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			handler := NewRegisterSessionHandler(tt.mocksFactory(t))
-			server := httptest.NewServer(handler)
+			server := testHttp.New(map[string]internalHttp.AppHTTPHandler{
+				"/register-session/": internalHttp.NewRegisterSessionHandler(tt.mocksFactory(t)),
+			})
 			defer server.Close()
 			expect := httpexpect.New(t, server.URL)
 
@@ -84,7 +86,7 @@ func TestFailRestoreSessions(t *testing.T) {
 	sessionRepo.EXPECT().AllSavedSessionIds().DoAndReturn(func() ([]string, error) {
 		return nil, fmt.Errorf("something went wrong... ")
 	})
-	handler := NewRegisterSessionHandler(auth, listener, sessionRepo)
+	handler := internalHttp.NewRegisterSessionHandler(auth, listener, sessionRepo)
 	err := handler.TryToAutoConnectAllSessions()
 	assert.NotNil(t, err)
 }
@@ -111,7 +113,7 @@ func TestSuccessRestoreSessions(t *testing.T) {
 			wg.Done()
 		})
 
-	handler := NewRegisterSessionHandler(auth, listener, sessionRepo)
+	handler := internalHttp.NewRegisterSessionHandler(auth, listener, sessionRepo)
 	err := handler.TryToAutoConnectAllSessions()
 	assert.Nil(t, err)
 }
@@ -134,7 +136,7 @@ func TestSkipFailedListenerOnRestoringSessions(t *testing.T) {
 			wg.Done()
 		})
 
-	handler := NewRegisterSessionHandler(auth, listener, sessionRepo)
+	handler := internalHttp.NewRegisterSessionHandler(auth, listener, sessionRepo)
 	err := handler.TryToAutoConnectAllSessions()
 	assert.Nil(t, err)
 }

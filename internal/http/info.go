@@ -10,6 +10,7 @@ import (
 
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 )
 
 // ActiveConnectionInfoHandler provides info about connection by session ID.
@@ -22,22 +23,30 @@ func NewInfo(connectionSupervisor service.Connections) *ActiveConnectionInfoHand
 	return &ActiveConnectionInfoHandler{connectionSupervisor: connectionSupervisor}
 }
 
-// ServeHTTP sends information of session and connection.
-func (handler *ActiveConnectionInfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+// Handle sends information of session and connection.
+func (handler *ActiveConnectionInfoHandler) Handle(w http.ResponseWriter, r *http.Request) *AppError {
 	params := mux.Vars(r)
 	sessionID := params["sessionID"]
 	result, err := handler.connectionSupervisor.AuthenticatedConnectionForSession(sessionID)
 	if err != nil {
-		handleError(w, "can't find active connection", err, http.StatusNotFound)
-		return
+		return &AppError{
+			Error:       errors.Wrap(err, "can't find active connection in info handler"),
+			ResponseMsg: "can't find active connection",
+			Code:        http.StatusNotFound,
+		}
 	}
 
 	err = json.NewEncoder(w).Encode(&Resp{ConnectionInfo: result.Wac().Info(), SessionInfo: result.Session()})
 	if err != nil {
-		handleError(w, "can't encode result", err, http.StatusInternalServerError)
-		return
+		return &AppError{
+			Error:       errors.Wrap(err, "can't encode result in info handler"),
+			ResponseMsg: "can't encode result",
+			Code:        http.StatusInternalServerError,
+		}
 	}
 	log.Printf("connection info for session `%s` sent", sessionID)
+
+	return nil
 }
 
 // Resp contains connection and session information.

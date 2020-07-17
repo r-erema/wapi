@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -70,7 +72,7 @@ func New() (*Config, error) {
 
 	webHookURL, err := webHook()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "webhook param setting fail")
 	}
 
 	return &Config{

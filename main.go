@@ -21,7 +21,7 @@ import (
 func main() {
 	conf, err := config.New()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("create config error: %+v", err)
 	}
 
 	initSentry(conf)
@@ -37,14 +37,14 @@ func main() {
 
 	router, err := httpInternal.Router(conf, sessRepo, connSupervisor, authorizer, resolver, listener, fs)
 	if err != nil {
-		log.Fatalf("init router error: %s", err)
+		log.Fatalf("init router error: %+v", err)
 	}
 
 	certFileExists, certKeyExists := true, true
-	if _, err = os.Stat(conf.CertFilePath); os.IsNotExist(err) {
+	if _, _ = os.Stat(conf.CertFilePath); os.IsNotExist(err) {
 		certFileExists = false
 	}
-	if _, err = os.Stat(conf.CertKeyPath); os.IsNotExist(err) {
+	if _, _ = os.Stat(conf.CertKeyPath); os.IsNotExist(err) {
 		certKeyExists = false
 	}
 
@@ -55,14 +55,14 @@ func main() {
 		log.Printf("wapi's listening at %s ...\n", conf.ListenHTTPHost)
 		err = http.ListenAndServeTLS(conf.ListenHTTPHost, conf.CertFilePath, conf.CertKeyPath, router)
 	}
-	log.Fatal(err)
+	log.Fatalf("server running error: %+v", err)
 }
 
 func msgRepo(conf *config.Config) repository.Message {
 	log.Print("connecting to redis...")
 	msgRepo, err := messageRepo.NewRedis(conf.RedisHost)
 	if err != nil {
-		log.Fatalf("error of init redis repo: %v\n", err)
+		log.Fatalf("error of init redis repo: %+v\n", err)
 	}
 	log.Print("ok")
 	return msgRepo
@@ -71,7 +71,7 @@ func msgRepo(conf *config.Config) repository.Message {
 func sessRepo(conf *config.Config) repository.Session {
 	sessRepo, err := sessionRepo.NewFileSystem(conf.FileSystemRootPath + "/sessions")
 	if err != nil {
-		log.Fatalf("can't create service `session`: %v\n", err)
+		log.Fatalf("can't create service `session`: %+v\n", err)
 	}
 	return sessRepo
 }
@@ -83,7 +83,7 @@ func connSupervisor(conf *config.Config) service.Connections {
 func qrFileResolver(conf *config.Config, fs osInfra.FileSystem) service.QRFileResolver {
 	qrFileResolver, err := service.NewQRImgResolver(conf.FileSystemRootPath+"/qr-codes", fs)
 	if err != nil {
-		log.Fatalf("can't create service `QR file resolver`: %v\n", err)
+		log.Fatalf("can't create service `QR file resolver`: %+v\n", err)
 	}
 	return qrFileResolver
 }

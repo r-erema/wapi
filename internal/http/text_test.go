@@ -1,4 +1,4 @@
-package http
+package http_test
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	internalHttp "github.com/r-erema/wapi/internal/http"
 	jsonInfra "github.com/r-erema/wapi/internal/infrastructure/json"
 	"github.com/r-erema/wapi/internal/model"
 	"github.com/r-erema/wapi/internal/service"
@@ -17,14 +18,13 @@ import (
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/gavv/httpexpect"
 	"github.com/golang/mock/gomock"
-	"github.com/magiconair/properties/assert"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewTextHandler(t *testing.T) {
-	a, c, m := mocksTextHandler(t)
-	handler := NewTextHandler(a, c, m)
-	assert.Equal(t, handler, &SendTextMessageHandler{auth: a, connectionsSupervisor: c, marshal: m})
+	handler := internalHttp.NewTextHandler(mocksTextHandler(t))
+	assert.NotNil(t, handler)
 }
 
 func TestSendTextMessageHandler_ServeHTTP(t *testing.T) {
@@ -49,8 +49,8 @@ func TestSendTextMessageHandler_ServeHTTP(t *testing.T) {
 			expectStatus: http.StatusBadRequest,
 		},
 		{
-			"Connection not found",
-			func(t *testing.T) (*mock.MockAuthorizer, *mock.MockConnections, *jsonInfra.MarshallCallback) {
+			name: "Connection not found",
+			mocksFactory: func(t *testing.T) (*mock.MockAuthorizer, *mock.MockConnections, *jsonInfra.MarshallCallback) {
 				authorizer, _, marshal := mocksTextHandler(t)
 				c := gomock.NewController(t)
 				connections := mock.NewMockConnections(c)
@@ -59,12 +59,12 @@ func TestSendTextMessageHandler_ServeHTTP(t *testing.T) {
 					Return(nil, &service.NotFoundError{})
 				return authorizer, connections, marshal
 			},
-			messageRequest,
-			http.StatusBadRequest,
+			jsonRequest:  messageRequest,
+			expectStatus: http.StatusBadRequest,
 		},
 		{
-			"Error message sending",
-			func(t *testing.T) (*mock.MockAuthorizer, *mock.MockConnections, *jsonInfra.MarshallCallback) {
+			name: "Error message sending",
+			mocksFactory: func(t *testing.T) (*mock.MockAuthorizer, *mock.MockConnections, *jsonInfra.MarshallCallback) {
 				authorizer, _, marshal := mocksTextHandler(t)
 				c := gomock.NewController(t)
 				wac := mock.NewMockConn(c)
@@ -78,28 +78,29 @@ func TestSendTextMessageHandler_ServeHTTP(t *testing.T) {
 
 				return authorizer, connections, marshal
 			},
-			messageRequest,
-			http.StatusInternalServerError,
+			jsonRequest:  messageRequest,
+			expectStatus: http.StatusInternalServerError,
 		},
 		{
-			"Response marshaling error",
-			func(t *testing.T) (*mock.MockAuthorizer, *mock.MockConnections, *jsonInfra.MarshallCallback) {
+			name: "Response marshaling error",
+			mocksFactory: func(t *testing.T) (*mock.MockAuthorizer, *mock.MockConnections, *jsonInfra.MarshallCallback) {
 				authorizer, connections, _ := mocksTextHandler(t)
 				marshal := jsonInfra.MarshallCallback(func(i interface{}) ([]byte, error) {
 					return nil, errors.New("marshaling error")
 				})
 				return authorizer, connections, &marshal
 			},
-			messageRequest,
-			http.StatusInternalServerError,
+			jsonRequest:  messageRequest,
+			expectStatus: http.StatusInternalServerError,
 		},
 	}
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			handler := NewTextHandler(tt.mocksFactory(t))
-			server := httpTest.New(map[string]http.Handler{"/send-message/": handler})
+			server := httpTest.New(map[string]internalHttp.AppHTTPHandler{
+				"/send-message/": internalHttp.NewTextHandler(tt.mocksFactory(t)),
+			})
 			defer server.Close()
 
 			expect := httpexpect.New(t, server.URL)
@@ -128,16 +129,16 @@ func mocksTextHandler(t *testing.T) (*mock.MockAuthorizer, *mock.MockConnections
 }
 
 func TestTextHandlerFailWriteResponse(t *testing.T) {
-	handler := NewTextHandler(mocksTextHandler(t))
+	handler := internalHttp.NewTextHandler(mocksTextHandler(t))
 	w := mock.NewFailResponseRecorder(httptest.NewRecorder())
 	r, err := http.NewRequest("POST", "/send-message/", bytes.NewReader([]byte("{}")))
 	require.Nil(t, err)
-	handler.ServeHTTP(w, r)
+	internalHttp.AppHandlerRunner{H: handler}.ServeHTTP(w, r)
 	assert.Equal(t, w.Status(), http.StatusInternalServerError)
 }
 
 func messageRequest() interface{} {
-	return &SendMessageRequest{
+	return &internalHttp.SendMessageRequest{
 		ChatID:    "+000000000000",
 		Text:      "hello",
 		SessionID: "_sid_",
