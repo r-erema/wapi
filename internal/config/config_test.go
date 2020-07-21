@@ -52,34 +52,34 @@ func TestNotValidEnvVars(t *testing.T) {
 		excludedEnvVars []string
 	}{
 		{
-			fmt.Sprintf("Invalid `%s` env variable", Env),
-			map[string]string{Env: "invalid_val"},
-			[]string{},
+			name:            fmt.Sprintf("Invalid `%s` env variable", Env),
+			envVars:         map[string]string{Env: "invalid_val"},
+			excludedEnvVars: []string{},
 		},
 		{
-			fmt.Sprintf("Empty `%s` env variable", ListenHTTPHost),
-			map[string]string{},
-			[]string{ListenHTTPHost},
+			name:            fmt.Sprintf("Empty `%s` env variable", ListenHTTPHost),
+			envVars:         map[string]string{},
+			excludedEnvVars: []string{ListenHTTPHost},
 		},
 		{
-			fmt.Sprintf("Empty `%s` env variable", FileSystemRootPoint),
-			map[string]string{},
-			[]string{FileSystemRootPoint},
+			name:            fmt.Sprintf("Empty `%s` env variable", FileSystemRootPoint),
+			envVars:         map[string]string{},
+			excludedEnvVars: []string{FileSystemRootPoint},
 		},
 		{
-			fmt.Sprintf("Empty `%s` env variable", RedisHost),
-			map[string]string{},
-			[]string{RedisHost},
+			name:            fmt.Sprintf("Empty `%s` env variable", RedisHost),
+			envVars:         map[string]string{},
+			excludedEnvVars: []string{RedisHost},
 		},
 		{
-			fmt.Sprintf("Empty `%s` env variable", WebHookURL),
-			map[string]string{},
-			[]string{WebHookURL},
+			name:            fmt.Sprintf("Empty `%s` env variable", WebHookURL),
+			envVars:         map[string]string{},
+			excludedEnvVars: []string{WebHookURL},
 		},
 		{
-			fmt.Sprintf("Var `%s` must contain triling slash", WebHookURL),
-			map[string]string{WebHookURL: "/wh"},
-			[]string{},
+			name:            fmt.Sprintf("Var `%s` must contain triling slash", WebHookURL),
+			envVars:         map[string]string{WebHookURL: "/wh"},
+			excludedEnvVars: []string{},
 		},
 	}
 	for _, tt := range tests {

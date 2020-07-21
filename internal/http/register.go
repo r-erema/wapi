@@ -8,6 +8,8 @@ import (
 
 	"github.com/r-erema/wapi/internal/repository"
 	"github.com/r-erema/wapi/internal/service"
+
+	"github.com/pkg/errors"
 )
 
 // RegisterSessionHandler is responsible for creation of new session.
@@ -26,29 +28,38 @@ func NewRegisterSessionHandler(
 	return &RegisterSessionHandler{auth: authorizer, listener: l, sessionRepo: sessRepo}
 }
 
-// ServeHTTP registers session and starts listening incoming messages.
-func (handler *RegisterSessionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+// Hendle registers session and starts listening incoming messages.
+func (handler *RegisterSessionHandler) Handle(w http.ResponseWriter, r *http.Request) *AppError {
 	decoder := json.NewDecoder(r.Body)
 	var registerSession RegisterSessionRequest
 	err := decoder.Decode(&registerSession)
 
 	if err != nil {
-		errPrefix := "request decoding error"
-		http.Error(w, errPrefix, http.StatusBadRequest)
-		log.Printf(`%v: %v`, errPrefix, err)
-		return
+		return &AppError{
+			Error:       errors.Wrap(err, "request decoding error in register handler"),
+			ResponseMsg: "request decoding error",
+			Code:        http.StatusBadRequest,
+		}
 	}
 	if registerSession.SessionID == "" {
-		errPrefix := "couldn't decode session_id param"
-		http.Error(w, errPrefix, http.StatusBadRequest)
-		log.Printf(`%v: %v`, errPrefix, err)
-		return
+		return &AppError{
+			Error:       errors.Wrap(err, "couldn't decode session_id param in register handler"),
+			ResponseMsg: "couldn't decode session_id param",
+			Code:        http.StatusBadRequest,
+		}
 	}
 
 	if err = handler.startListenIncomingMessages(registerSession.SessionID); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Printf(`%v`, err)
+		return &AppError{
+			Error:       errors.Wrap(err, "start listening error in register handler"),
+			ResponseMsg: "start listening error",
+			Code:        http.StatusInternalServerError,
+		}
 	}
+
+	return nil
 }
 
 func (handler *RegisterSessionHandler) startListenIncomingMessages(sessionID string) error {
