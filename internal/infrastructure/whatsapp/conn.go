@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Rhymen/go-whatsapp"
+	"github.com/pkg/errors"
 )
 
 // ErrMsg401 should emerge if login failed because of 401 response.
@@ -37,7 +38,7 @@ type RhymenConn struct {
 func NewRhymenConn(timeout time.Duration) (*RhymenConn, error) {
 	wac, err := whatsapp.NewConn(timeout)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "connection failure")
 	}
 	return &RhymenConn{wac: wac}, nil
 }

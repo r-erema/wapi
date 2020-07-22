@@ -13,6 +13,8 @@ import (
 	httpInfra "github.com/r-erema/wapi/internal/infrastructure/http"
 	jsonInfra "github.com/r-erema/wapi/internal/infrastructure/json"
 	"github.com/r-erema/wapi/internal/repository"
+
+	"github.com/pkg/errors"
 )
 
 // Listener listens for incoming messages from WhatsApp server.
@@ -65,7 +67,7 @@ func (l *WebHook) ListenForSession(sessionID string, wg *sync.WaitGroup) (gracef
 	if err != nil || wac == nil || session == nil {
 		log.Printf("login failed in message ListenerWebHook: %v\n", err)
 		wg.Done()
-		return false, err
+		return false, errors.Wrapf(err, "login by session `%s` failed", sessionID)
 	}
 
 	log.Printf("start listening messages for sessionRepo `%s`, bound login: `%s`", session.SessionID, session.WhatsAppSession.Wid)
@@ -90,12 +92,10 @@ func (l *WebHook) ListenForSession(sessionID string, wg *sync.WaitGroup) (gracef
 	waSession, err := wac.Disconnect()
 	session.WhatsAppSession = &waSession
 	if err != nil {
-		log.Printf("error disconnecting: %v\n", err)
-		return false, err
+		return false, errors.Wrap(err, "disconnection failed")
 	}
 	if err := l.sessionRepo.WriteSession(session); err != nil {
-		log.Printf("error saving sessionRepo: %v", err)
-		return false, err
+		return false, errors.Wrap(err, "error saving sessionRepo")
 	}
 	return true, nil
 }

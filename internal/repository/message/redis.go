@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
+	"github.com/pkg/errors"
 )
 
 // RedisRepository stores messages metadata via Redis.
@@ -17,7 +18,7 @@ type RedisRepository struct {
 func NewRedis(host string) (*RedisRepository, error) {
 	redisClient := redis.NewClient(&redis.Options{Addr: host})
 	if _, err := redisClient.Ping().Result(); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "redis client creation error")
 	}
 	return &RedisRepository{client: redisClient, storeExpirationTime: time.Hour * 24 * 30}, nil
 }
@@ -31,12 +32,12 @@ func (r *RedisRepository) SaveMessageTime(msgID string, msgTime time.Time) error
 func (r *RedisRepository) MessageTime(msgID string) (*time.Time, error) {
 	timestamp, err := r.client.Get(timeKey(msgID)).Result()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "couldn't get timestamp by message id")
 	}
 
 	ts, err := strconv.ParseInt(timestamp, 10, 64)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "couldn't parse timestamp")
 	}
 
 	t := time.Unix(ts, 0)

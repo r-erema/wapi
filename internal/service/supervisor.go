@@ -59,7 +59,7 @@ func NewSV(pingDevicesDuration time.Duration) *ConnectionsPool {
 func (supervisor *ConnectionsPool) AddAuthenticatedConnectionForSession(sessionID string, sessConnDTO *SessionConnectionDTO) error {
 	pong, err := sessConnDTO.Wac().AdminTest()
 	if !pong || err != nil {
-		return fmt.Errorf("connection for session `%s`, not active, couldn't be added: %v", sessionID, err)
+		return fmt.Errorf("connection for session `%s`, not active, couldn't be added: %w", sessionID, err)
 	}
 	supervisor.RemoveConnectionForSession(sessionID)
 	supervisor.connectionSessionPool[sessionID] = sessConnDTO
@@ -81,7 +81,7 @@ func (supervisor *ConnectionsPool) AuthenticatedConnectionForSession(sessionID s
 	if target, ok := supervisor.connectionSessionPool[sessionID]; ok {
 		pong, err := target.Wac().AdminTest()
 		if !pong || err != nil {
-			return nil, fmt.Errorf("connection for session `%s` existed, but device doesn't response at the moment: %v", sessionID, err)
+			return nil, fmt.Errorf("connection for session `%s` existed, but device doesn't response at the moment: %w", sessionID, err)
 		}
 		return target, nil
 	}

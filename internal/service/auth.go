@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -13,6 +12,7 @@ import (
 
 	terminal "github.com/Baozisoftware/qrcode-terminal-go"
 	whatsappRhymen "github.com/Rhymen/go-whatsapp"
+	"github.com/pkg/errors"
 	"github.com/skip2/go-qrcode"
 )
 
@@ -55,18 +55,18 @@ func NewAuth(
 func (auth *Auth) Login(sessionID string) (whatsapp.Conn, *model.WapiSession, error) {
 	wac, err := auth.connector.Connect(auth.timeoutConnection)
 	if err != nil {
-		return nil, nil, fmt.Errorf("create connection failed for session `%s`: %v", sessionID, err)
+		return nil, nil, errors.Wrapf(err, "create connection failed for session `%s`", sessionID)
 	}
 
 	wapiSession, err := auth.SessionRepo.ReadSession(sessionID)
 	if err == nil {
 		if loginErr := auth.tryLoginBySession(wac, wapiSession); loginErr != nil {
-			return nil, nil, loginErr
+			return nil, nil, errors.Wrap(loginErr, "couldn't login by session")
 		}
 	} else {
 		wapiSession, err = auth.loginByQR(sessionID, wac)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, errors.Wrap(err, "couldn't login by qr-code")
 		}
 	}
 
@@ -74,12 +74,12 @@ func (auth *Auth) Login(sessionID string) (whatsapp.Conn, *model.WapiSession, er
 		sessionID,
 		NewDTO(wac, wapiSession, make(chan string)),
 	); err != nil {
-		return nil, nil, fmt.Errorf("error adding connection to supervisor: %v", err)
+		return nil, nil, errors.Wrap(err, "error adding connection to supervisor")
 	}
 
 	err = auth.SessionRepo.WriteSession(wapiSession)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error saving session: %v", err)
+		return nil, nil, errors.Wrap(err, "error saving session")
 	}
 	return wac, wapiSession, nil
 }
@@ -106,7 +106,7 @@ func (auth *Auth) loginByQR(sessionID string, wac whatsapp.Conn) (*model.WapiSes
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "couldn't login by qr-code")
 	}
 	return &model.WapiSession{SessionID: sessionID, WhatsAppSession: &session}, nil
 }
@@ -118,7 +118,7 @@ func (auth *Auth) tryLoginBySession(wac whatsapp.Conn, wapiSession *model.WapiSe
 			_ = auth.SessionRepo.RemoveSession(wapiSession.SessionID)
 			removeSessionFileTxt = ", probably logout happened on the phone, session file will be removed"
 		}
-		return fmt.Errorf("restoring failed: %v%v", err, removeSessionFileTxt)
+		return errors.Wrapf(err, "restoring failed%s", removeSessionFileTxt)
 	}
 	return nil
 }

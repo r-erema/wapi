@@ -10,6 +10,8 @@ import (
 	"strings"
 
 	"github.com/r-erema/wapi/internal/model"
+
+	"github.com/pkg/errors"
 )
 
 const sessionFileExt = ".gob"
@@ -24,7 +26,7 @@ func NewFileSystem(sessionStoragePath string) (*FileSystemSession, error) {
 	if _, err := os.Stat(sessionStoragePath); os.IsNotExist(err) {
 		err := os.MkdirAll(sessionStoragePath, os.ModePerm)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "session path doesn't exist and unable to create it")
 		}
 	}
 	return &FileSystemSession{sessionStoragePath: sessionStoragePath}, nil
@@ -35,7 +37,7 @@ func (f FileSystemSession) ReadSession(sessionID string) (*model.WapiSession, er
 	ws := &model.WapiSession{}
 	file, err := os.Open(f.resolveSessionFilePath(sessionID))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "couldn't open session path")
 	}
 	defer func() {
 		err = file.Close()
@@ -46,7 +48,7 @@ func (f FileSystemSession) ReadSession(sessionID string) (*model.WapiSession, er
 	decoder := gob.NewDecoder(file)
 	err = decoder.Decode(&ws)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "couldn't decode session")
 	}
 	return ws, nil
 }
@@ -55,7 +57,7 @@ func (f FileSystemSession) ReadSession(sessionID string) (*model.WapiSession, er
 func (f FileSystemSession) WriteSession(s *model.WapiSession) error {
 	file, err := os.Create(f.resolveSessionFilePath(s.SessionID))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "couldn't create session file")
 	}
 	defer func() {
 		err = file.Close()
@@ -66,7 +68,7 @@ func (f FileSystemSession) WriteSession(s *model.WapiSession) error {
 	encoder := gob.NewEncoder(file)
 	err = encoder.Encode(s)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "couldn't encode session")
 	}
 	return nil
 }
@@ -76,7 +78,7 @@ func (f FileSystemSession) AllSavedSessionIds() ([]string, error) {
 	var ids []string
 	files, err := ioutil.ReadDir(f.sessionStoragePath)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "couldn't read sessions path")
 	}
 	for _, file := range files {
 		ext := path.Ext(file.Name())
@@ -91,7 +93,7 @@ func (f FileSystemSession) AllSavedSessionIds() ([]string, error) {
 // RemoveSession removes session from repository.
 func (f FileSystemSession) RemoveSession(sessionID string) error {
 	if err := os.Remove(f.resolveSessionFilePath(sessionID)); err != nil {
-		return err
+		return errors.Wrap(err, "couldn't remove session path")
 	}
 	return nil
 }
