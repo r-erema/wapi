@@ -14,6 +14,7 @@ import (
 
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/getsentry/sentry-go"
+	"github.com/pkg/errors"
 )
 
 // Sentry flush timout
@@ -81,11 +82,11 @@ func (h *Handler) HandleError(err error) {
 		log.Println("reconnecting...")
 		if _, err = h.Connection.RestoreWithSession(h.Session.WhatsAppSession); err != nil {
 			log.Printf("restore failed, session `%v`: %v", h.Session.SessionID, err)
-			sentry.CaptureException(fmt.Errorf(
-				"couldn't restore connection for session `%s`, login: `%s`: %v",
+			sentry.CaptureException(errors.Wrapf(
+				err,
+				"couldn't restore connection for session `%s`, login: `%s`",
 				h.Session.SessionID,
 				h.Connection.Info().Wid,
-				err,
 			))
 			sentry.Flush(time.Second * SentryFlushTimeoutSeconds)
 		} else {

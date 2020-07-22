@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -39,7 +40,7 @@ func setEnvs(customEnvs map[string]string, excludedEnvs []string) (err error) {
 	for env, val := range envsToSet {
 		err = os.Setenv(env, val)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "setting env var failed")
 		}
 	}
 	return nil

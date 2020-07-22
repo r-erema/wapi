@@ -75,7 +75,7 @@ func (handler *RegisterSessionHandler) startListenIncomingMessages(sessionID str
 
 	select {
 	case err := <-errChan:
-		return err
+		return errors.Wrap(err, "error occurred while listening message for session")
 	default:
 		return nil
 	}
@@ -85,7 +85,7 @@ func (handler *RegisterSessionHandler) startListenIncomingMessages(sessionID str
 func (handler *RegisterSessionHandler) TryToAutoConnectAllSessions() error {
 	sessionIDs, err := handler.sessionRepo.AllSavedSessionIds()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "couldn't get all session ids")
 	}
 	for _, sessionID := range sessionIDs {
 		if err := handler.startListenIncomingMessages(sessionID); err != nil {

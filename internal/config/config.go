@@ -47,7 +47,7 @@ type Config struct {
 func New() (*Config, error) {
 	env, err := envMode()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "getting env mode failure")
 	}
 
 	checkoutDuration := duration()

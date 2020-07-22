@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/r-erema/wapi/internal/infrastructure/os"
+
+	"github.com/pkg/errors"
 )
 
 // QRFileResolver builds qr-code images path.
@@ -23,7 +25,7 @@ func NewQRImgResolver(qrImagesFilesPath string, fs os.FileSystem) (*QRImgResolve
 	if _, err := fs.Stat(qrImagesFilesPath); fs.IsNotExist(err) {
 		err := fs.MkdirAll(qrImagesFilesPath, os.ModePerm)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "couldn't create images path")
 		}
 	}
 

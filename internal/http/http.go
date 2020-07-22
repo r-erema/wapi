@@ -14,6 +14,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 )
 
 // AppError is custom http application error
@@ -60,7 +61,7 @@ func Router(
 	registerHandler := NewRegisterSessionHandler(authorizer, listener, sessRepo)
 	log.Print("trying to auto connect saved sessions if exist...")
 	if err := registerHandler.TryToAutoConnectAllSessions(); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "couldn't autoconnect all sessions")
 	}
 	marshal := jsonInfra.MarshallCallback(json.Marshal)
 	sendMessageHandler := NewTextHandler(authorizer, connSupervisor, &marshal)
